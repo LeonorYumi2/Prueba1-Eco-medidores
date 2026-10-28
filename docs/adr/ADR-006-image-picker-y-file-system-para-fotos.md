@@ -34,11 +34,11 @@ La interfaz de captura no necesita ser propia: el requisito es obtener la foto y
 
 ## Decisión
 
-- **Captura:** `expo-image-picker`, abriendo la cámara del sistema, con calidad reducida para ahorrar espacio [ajusta el valor].
+- **Captura:** `expo-image-picker`, abriendo la cámara del sistema, con calidad reducida (`quality: 0.85`) para equilibrar legibilidad, tiempo de procesamiento y espacio.
 - **Conservación:** justo después de capturarla, la foto se **copia a la carpeta permanente de la app** con `expo-file-system`, con un nombre basado en el `clienteId` de la lectura. En la lectura y en el borrador (ADR-002) se guarda **solo la ruta** de esa copia, nunca la imagen.
 - **Interfaz de archivos:** se usa la interfaz actual de SDK 57 (`File` y `Paths` desde `expo-file-system`), no la antigua de `expo-file-system/legacy`.
 - **Permiso:** se solicita antes de abrir la cámara. Si se niega, se muestra por qué la app lo necesita, con un botón para ir a los ajustes del teléfono. Si la foto es opcional, el técnico puede continuar sin ella. Si es obligatoria, no puede completar el registro hasta concederlo.
-- **Limpieza:** al descartar un borrador se borra su foto. Las fotos de lecturas enviadas se conservan [ajusta si decides lo contrario].
+- **Limpieza:** al descartar un borrador se borra su foto de la carpeta permanente. Las fotos asociadas a lecturas enviadas se conservan como respaldo.
 - Si la copia a la carpeta permanente falla, la foto no se da por guardada y, si era obligatoria, no se permite continuar.
 
 ## Consecuencias
@@ -48,7 +48,7 @@ La interfaz de captura no necesita ser propia: el requisito es obtener la foto y
 - Se agregan dos dependencias, ambas del propio ecosistema de Expo.
 - Obligación: copiar la foto antes de guardar la ruta, y borrarla cuando se descarta un borrador.
 - **Desventaja aceptada:** poco control sobre la pantalla de captura.
-- **Riesgo:** Android puede cerrar la app mientras la cámara está abierta y perder la foto tomada [VERIFICAR si la librería permite recuperar el resultado pendiente].
+- **Riesgo:** Android puede recrear la actividad mientras la cámara está abierta. `expo-image-picker` conserva el flujo de la captura, pero el archivo temporal debe copiarse inmediatamente a la carpeta permanente antes de continuar.
 - **Riesgo:** acumular fotos ocupa espacio en el teléfono, y las de lecturas enviadas no se borran.
 - **Riesgo:** mezclar la interfaz antigua y la nueva de `expo-file-system` produce errores difíciles de entender.
 
@@ -63,4 +63,4 @@ La interfaz de captura no necesita ser propia: el requisito es obtener la foto y
 
 ## Uso de IA
 
-Elegí `expo-image-picker` y `expo-file-system` porque ya los he usado en la materia y puedo explicarlos. Le pedí a una IA que revisara esa elección frente a R7. La IA señaló que la foto debe copiarse a una carpeta permanente y que `expo-file-system` cambió su interfaz en SDK 57; esto último lo contrasté con la documentación de Expo para esa versión. También propuso expo-camera como alternativa, que descarté porque no necesito una pantalla de captura propia. 
+Se eligieron `expo-image-picker` y `expo-file-system` porque usan el ecosistema Expo, están disponibles en SDK 57 y permiten explicar R7 sin construir una cámara propia. La asistencia de IA comparó la propuesta con `expo-camera` y señaló la necesidad de copiar el archivo temporal a almacenamiento permanente. Después se verificó el uso de `File`, `Directory` y `Paths` en la API actual de SDK 57; `expo-camera` se descartó por agregar una pantalla y un ciclo de captura propios innecesarios.

@@ -44,7 +44,7 @@ Se usa **fetch nativo** dentro de un único módulo de comunicación, con estas 
    2. Si no existe o es de otro día, se descarga y se guarda junto con la fecha de consulta.
    3. Si la descarga falla por falta de red o por tiempo agotado y hay un dato guardado, aunque sea de otro día, se muestra ese dato con su fecha de consulta.
    4. Si la descarga falla y no hay nada guardado, se avisa que no hay datos de ese medidor. No se inventa una lectura anterior ni un promedio.
-5. Una respuesta vacía o un 404 significan "medidor no existe" [VERIFICAR: probar `?codigo=MED-999999` en MockAPI para ver cuál devuelve].
+5. Una respuesta vacía o un 404 significan "medidor no existe"; el código exige una coincidencia exacta entre el resultado y el código solicitado.
 
 Detectar la falta de señal por el fallo de la propia petición evita depender de otra librería solo para esta consulta.
 

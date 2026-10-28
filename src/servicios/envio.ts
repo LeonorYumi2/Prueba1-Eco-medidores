@@ -61,6 +61,13 @@ export async function enviarPendientes(alTerminar?: () => Promise<void> | void):
         lectura.lecturaAnterior = anterior;
         lectura.consumo = consumo;
         lectura.anomalo = anomalo;
+
+        // R6/R7: una lectura puede volverse anómala al verificarse. No puede
+        // enviarse hasta aportar evidencia y confirmación obligatorias.
+        if (anomalo && (!lectura.fotoUri || !lectura.confirmoRevision)) {
+          await actualizarLectura(lectura.medidorCodigo, lectura.mes, { envio: 'conflicto' });
+          continue;
+        }
       }
 
       // 2) Comprobar si el servidor ya tiene esta lectura con el clienteId exacto.

@@ -52,6 +52,12 @@ Se usa **AsyncStorage con una clave por registro**, sin una lista única compart
 
 **Cola de envío.** No existe una lista aparte: las lecturas pendientes se obtienen leyendo las claves que empiezan con `lectura:` y filtrando por estado.
 
+**Historial compartido por dispositivo.** Las lecturas se guardan una vez por `medidorCodigo + mes`, porque R10 exige impedir un segundo registro del medidor en el mismo período dentro de este dispositivo. La clave no incluye `tecnicoCodigo`. Por ello, los técnicos que comparten el teléfono ven la misma bitácora local.
+
+Cada lectura sí conserva `tecnicoCodigo`, que permite identificar quién la realizó y enviarla a la oficina con esa autoría. Esta separación permite una trazabilidad básica sin exigir una base de datos privada por técnico.
+
+El contador de pendientes y el proceso de envío siguen compartidos por el dispositivo. Así, ninguna lectura pendiente queda sin enviar por haber cambiado de sesión.
+
 **Instalación.** Se instala con `npx expo install @react-native-async-storage/async-storage` y no con `npm`, para que se elija la versión compatible con SDK 57. La documentación de Expo para SDK 57 indica la 2.2.0 y hay un reporte de que las 3.x no funcionan desde SDK 54.
 
 **Se deciden en otros ADR**, y este ADR no los resuelve:
@@ -63,12 +69,15 @@ Se usa **AsyncStorage con una clave por registro**, sin una lista única compart
 ## Consecuencias
 
 - Una sola librería de persistencia cubre R1, R3, R4, R8, R9 y R10.
+- Al alternar técnicos en un mismo dispositivo, el historial y la cola offline siguen disponibles.
 - Corregir o marcar como enviada una lectura modifica una sola clave.
+- Obligación: las vistas que presenten lecturas deben evitar ocultar el código del técnico que las creó.
 - Obligación: consultar la clave antes de crear una lectura y pasar toda escritura de lecturas por la función que las ejecuta una a la vez.
 - Obligación: validar la estructura de lo que se lee, porque se guarda como texto.
 - **Desventaja aceptada:** la unicidad de R10 depende de mi código y no de una restricción de la base. Un error de lógica podría permitir un duplicado.
 - **Riesgo:** no hay transacciones. Si la app se cierra entre dos escrituras relacionadas, los datos pueden quedar a medias.
 - **Riesgo:** otro teléfono puede registrar el mismo medidor y mes, porque esta regla solo protege a este teléfono.
+- **Riesgo:** si existe un requisito futuro de privacidad por usuario, las lecturas deberán filtrarse por `tecnicoCodigo` y los borradores deberán aislarse por técnico.
 - **Riesgo:** los datos no están cifrados. Solo se guarda el código de empleado y los datos de lecturas, nunca la clave.
 - **Riesgo de versión:** instalar una versión incompatible puede hacer fallar la compilación del APK. Mitigación: instalar siempre con `npx expo install`.
 
@@ -76,6 +85,9 @@ Se usa **AsyncStorage con una clave por registro**, sin una lista única compart
 
 - Revisar `package.json`: AsyncStorage figura con la versión que instaló `npx expo install`.
 - Iniciar sesión, cerrar y abrir la app: sigue identificado. Cerrar sesión: la clave `sesion` ya no existe y se pide el login.
+- Crear una lectura con el Técnico 1, cerrar sesión e iniciar como Técnico 2: ambas sesiones ven la misma lectura y el campo `tecnicoCodigo` conserva al técnico que la creó.
+- Intentar registrar el mismo medidor y mes con otro técnico: la aplicación rechaza el segundo registro.
+- Cerrar sesión con una lectura pendiente: al iniciar con otro técnico, la cola global sigue mostrando esa lectura pendiente y el envío conserva al técnico que la creó.
 - Consultar un medidor con señal, activar modo avión y consultarlo de nuevo: aparecen los datos guardados.
 - Intentar guardar dos lecturas del mismo medidor en el mismo mes: la segunda se rechaza.
 - Corregir una lectura pendiente: sigue habiendo una sola clave. Una lectura enviada no se puede corregir.

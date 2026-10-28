@@ -31,15 +31,15 @@ El enunciado deja casos sin definir que este ADR debe resolver:
 | Alternativa | Ventajas en este proyecto | Desventajas en este proyecto |
 | --- | --- | --- |
 | **Estado de React (`useState`) con las validaciones propias del ADR-005** | No agrega dependencias. Con cinco campos el código es corto y explicable en la defensa. Las reglas de R5 y R6 quedan en las funciones de validación y cálculo, no repartidas en la pantalla. | Hay que escribir a mano el manejo de errores por campo y cuidar que la pantalla no repita reglas. |
-| **React Hook Form** | Manejo de errores por campo y menos redibujos al escribir. | Es una dependencia nueva [VERIFICAR si la he visto en la materia]. Sus ventajas importan en formularios largos, y este tiene cinco campos. Aun así habría que conectar el borrador de R8 y las reglas de R6, que dependen de un cálculo. |
+| **React Hook Form** | Manejo de errores por campo y menos redibujos al escribir. | Es una dependencia nueva para un formulario de cinco campos. Sus ventajas no compensan el costo porque habría que conectar el borrador de R8 y las reglas de R6, que dependen de cálculos. |
 | **Formik** | Manejo de valores, errores y envío integrado. | Mismo problema de tamaño que la alternativa anterior, y es otra dependencia que justificar sin que algún requisito la pida. |
 
 ## Decisión
 
 Se usa **`useState` con las funciones de validación del ADR-005**, sin librería de formularios.
 
-- **Pasos:** dos pantallas (estado y lectura, y resumen). Cuando se implemente la foto (ADR-006) se insertará una tercera entre ambas.
-- **Borrador (R8):** lo escrito se guarda en el teléfono unos 400 ms después del último cambio, y no en cada tecla. Así la escritura no se traba ni se pierden caracteres, y un cierre inesperado conserva casi todo.
+- **Pasos:** estado y lectura, foto, y resumen. La captura se integra entre la edición y la revisión final según el ADR-006.
+- **Borrador (R8):** cada cambio se guarda inmediatamente mediante una cola serializada. Además, el cambio a segundo plano fuerza una última persistencia del estado visible. Así no se pierde el último carácter al suspender la app.
 - **Cálculo (R6):** el consumo es lectura actual menos lectura anterior. Es anómalo cuando **supera** (no cuando iguala) tres veces el promedio. La confirmación es un interruptor que debe estar activo para continuar.
 - **Caso 1, medidor sin datos y sin señal:** se permite registrar. No se puede calcular consumo ni detectar anomalía, así que la lectura queda marcada como **pendiente de verificar**. Al recuperar la conexión se completa según el ADR-007.
 - **Caso 2, lectura menor que la anterior:** se rechaza con un mensaje, porque produciría un consumo negativo. Una lectura igual a la anterior se acepta (consumo cero).
@@ -52,7 +52,7 @@ Se usa **`useState` con las funciones de validación del ADR-005**, sin librerí
 - Las reglas de R5 y R6 están en un solo lugar (validación y cálculo), y las pantallas solo las usan.
 - Corregir una lectura pendiente no crea un registro nuevo ni cambia su identificador.
 - **Desventaja aceptada:** el manejo de errores por campo y del estado del formulario es manual.
-- **Riesgo:** si la app se cierra durante los 400 ms posteriores a un cambio, ese último cambio se pierde.
+- **Riesgo:** aunque las escrituras sean inmediatas, una interrupción del proceso mientras el sistema escribe puede requerir recuperar el último estado. La cola serializa las operaciones y el evento de segundo plano persiste el último borrador.
 - **Riesgo:** rechazar una lectura menor que la anterior impide registrar un medidor que fue reemplazado. El enunciado no cubre ese caso.
 - **Riesgo:** el mes depende de la fecha del teléfono; si está mal configurada, la regla de R10 se aplica sobre un mes equivocado.
 

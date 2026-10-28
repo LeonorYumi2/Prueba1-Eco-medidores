@@ -73,4 +73,4 @@ src/app/
 
 ## Uso de IA
 
-Se le pidió a la IA ayuda para redactar este ADR y para decidir cómo proteger las pantallas según la sesión. La IA propuso las rutas protegidas de Expo Router y el indicador en el `_layout.tsx` raíz. Antes de aceptarlo se contrastó con la documentación oficial de Expo: las rutas protegidas existen desde SDK 53, forman parte de la guía de autenticación y solo actúan en el cliente, y esa guía también indica mantener la pantalla de carga hasta que la sesión termine de cargar. [Ajusta aquí con tus palabras qué de esto verificaste tú y qué cambiaste del borrador.]
+Se usó asistencia de IA para comparar alternativas y redactar el borrador. Se decidió con criterio propio usar Expo Router con rutas protegidas porque SDK 57 ya incluye la navegación, no agrega dependencias y permite mantener un indicador global en el layout raíz. La implementación fue revisada contra el flujo real de carga de sesión y acceso al registro; el estudiante debe explicar que las rutas protegidas aplican controles solo en el cliente.

@@ -1,6 +1,7 @@
 // Estado compartido entre pantallas (ADR-004): Context + useReducer.
 // Regla: AsyncStorage es la fuente de verdad; este contexto es una copia en memoria.
 // Toda escritura guarda primero en AsyncStorage y después actualiza el contexto.
+import { Directory, File, Paths } from 'expo-file-system';
 import {
   createContext,
   ReactNode,
@@ -84,13 +85,34 @@ type ValorContexto = {
 };
 
 const Contexto = createContext<ValorContexto | null>(null);
+const carpetaFotosUri = new Directory(Paths.document, 'eco-medidores-fotos').uri;
+let colaBorrador: Promise<void> = Promise.resolve();
+
+function enColaBorrador(tarea: () => Promise<void>): Promise<void> {
+  const siguiente = colaBorrador.then(tarea, tarea);
+  colaBorrador = siguiente.catch(() => undefined);
+  return siguiente;
+}
+
+function eliminarFoto(uri: string): void {
+  if (!uri || !uri.startsWith(carpetaFotosUri)) return;
+  try {
+    const archivo = new File(uri);
+    if (archivo.exists) archivo.delete();
+  } catch {
+    // El borrador puede descartarse incluso si el archivo ya fue limpiado.
+  }
+}
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [estado, dispatch] = useReducer(reductor, estadoInicial);
 
-  // Copia siempre actualizada del borrador, para que las escrituras diferidas no usen datos viejos.
+  // Copia siempre actualizada del borrador, para que las escrituras no usen datos viejos.
   const borradorActual = useRef<Borrador | null>(null);
-  borradorActual.current = estado.borrador;
+
+  useEffect(() => {
+    borradorActual.current = estado.borrador;
+  }, [estado.borrador]);
 
   // Seguimiento de la conexión previa para detectar cuando pasa de falsa a verdadera (ADR-007).
   const conexionPrevia = useRef<boolean | null>(null);
@@ -169,22 +191,33 @@ export function AppProvider({ children }: { children: ReactNode }) {
     dispatch({ tipo: 'CERRAR_SESION' });
   }, []);
 
-  const iniciarBorrador = useCallback(async (borrador: Borrador) => {
-    await guardar(claves.borrador, borrador);
-    dispatch({ tipo: 'BORRADOR', borrador });
+  const iniciarBorrador = useCallback((borrador: Borrador) => {
+    return enColaBorrador(async () => {
+      await guardar(claves.borrador, borrador);
+      borradorActual.current = borrador;
+      dispatch({ tipo: 'BORRADOR', borrador });
+    });
   }, []);
 
-  const actualizarBorrador = useCallback(async (cambios: Partial<Borrador>) => {
-    const base = borradorActual.current;
-    if (!base) return; // ya no hay registro en curso (se descartó o se guardó)
-    const nuevo: Borrador = { ...base, ...cambios };
-    await guardar(claves.borrador, nuevo);
-    if (borradorActual.current) dispatch({ tipo: 'BORRADOR', borrador: nuevo });
+  const actualizarBorrador = useCallback((cambios: Partial<Borrador>) => {
+    return enColaBorrador(async () => {
+      const base = borradorActual.current;
+      if (!base) return;
+      const nuevo: Borrador = { ...base, ...cambios };
+      await guardar(claves.borrador, nuevo);
+      borradorActual.current = nuevo;
+      dispatch({ tipo: 'BORRADOR', borrador: nuevo });
+    });
   }, []);
 
-  const descartarBorrador = useCallback(async () => {
-    await borrar(claves.borrador);
-    dispatch({ tipo: 'BORRADOR', borrador: null });
+  const descartarBorrador = useCallback(() => {
+    return enColaBorrador(async () => {
+      const borrador = borradorActual.current;
+      await borrar(claves.borrador);
+      borradorActual.current = null;
+      dispatch({ tipo: 'BORRADOR', borrador: null });
+      if (borrador) eliminarFoto(borrador.fotoUri);
+    });
   }, []);
 
   const valor = useMemo(

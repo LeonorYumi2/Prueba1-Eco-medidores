@@ -99,7 +99,7 @@ export type Borrador = {
   clienteId: string;
   medidorCodigo: string;
   medidor: Medidor | null; // null = se registra sin datos del medidor
-  paso: 'estado' | 'resumen';
+  paso: 'estado' | 'foto' | 'resumen';
   estadoMedidor: EstadoMedidor;
   lectura: string; // texto tal como se escribe
   motivo: string;
@@ -146,7 +146,7 @@ export function esBorrador(x: unknown): x is Borrador {
     esTexto(x.clienteId) &&
     esTexto(x.medidorCodigo) &&
     (x.medidor === null || esMedidor(x.medidor)) &&
-    (x.paso === 'estado' || x.paso === 'resumen') &&
+    (x.paso === 'estado' || x.paso === 'foto' || x.paso === 'resumen') &&
     esCadena(x.estadoMedidor) &&
     ESTADOS_MEDIDOR.includes(x.estadoMedidor) &&
     esCadena(x.lectura) &&

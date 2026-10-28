@@ -51,7 +51,12 @@ export function guardarLectura(nueva: Lectura): Promise<ResultadoGuardado> {
       const existente = await leerLectura(nueva.medidorCodigo, nueva.mes);
       if (existente && existente.envio === 'enviada') return { tipo: 'ya-enviada' } as const;
       const aGuardar: Lectura = existente
-        ? { ...nueva, clienteId: existente.clienteId, envio: existente.envio }
+        ? {
+            ...nueva,
+            clienteId: existente.clienteId,
+            // Corregir una lectura en conflicto la vuelve a poner en cola.
+            envio: 'pendiente',
+          }
         : nueva;
       await guardar(claves.lectura(aGuardar.medidorCodigo, aGuardar.mes), aGuardar);
       return { tipo: 'ok', lectura: aGuardar } as const;
