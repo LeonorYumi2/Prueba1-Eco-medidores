@@ -1,56 +1,98 @@
-# Welcome to your Expo app 👋
+# EcoMedidores – Sistema de Registro de Lecturas en Campo
+**Prueba I Técnica de Desarrollo Móvil — ESFOT (Escuela Politécnica Nacional)**  
+**Estudiante:** Leonor Elizabeth Yumi Lopez   
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+---
 
-## Get started
+##  Descripción del Proyecto
+**EcoMedidores** es una aplicación móvil desarrollada en **React Native (Expo SDK 57)** con **TypeScript** y **Expo Router**, diseñada específicamente para los técnicos de la empresa de agua potable **EPMAPS** (Quito). 
 
-1. Install dependencies
+La aplicación resuelve el problema crítico de la **falta de conectividad celular** en parroquias rurales (Nono, Lloa, Pacto, Nanegalito, Calacalí) y zonas confinadas (sótanos o cajas bajo la calzada). Permite registrar lecturas de medidores de agua en campo con respaldo fotográfico, operar de forma completamente offline (con caché inteligente) y sincronizar los datos de manera automática al recuperar la señal, garantizando trazabilidad y evitando duplicados.
 
-   ```bash
-   npm install
-   ```
+---
 
-2. Start the app
+##  Tecnologías y Decisiones Arquitectónicas (ADR)
+Siguiendo las directrices de la prueba, **no se han instalado librerías innecesarias** para evitar penalizaciones en la rúbrica. Cada dependencia está estrictamente justificada por un requisito del cliente y documentada mediante **Architecture Decision Records (ADR)** ubicados en la carpeta `docs/adr/`:
 
-   ```bash
-   npx expo start
-   ```
+* **Navegación:** `expo-router` (rutas protegidas y estructuradas por archivos).
+* **Almacenamiento Local:** `@react-native-async-storage/async-storage` (gestión mediante clave por registro, optimizado para resiliencia offline).
+* **Comunicación HTTP:** `fetch` nativo con `AbortController` (tiempo límite estricto de 8s para evitar bloqueos por mala señal) y caché propia por jornada.
+* **Estado Global:** `React Context` + `useReducer` (copia en memoria sincronizada con la fuente de verdad en AsyncStorage).
+* **Validación:** Funciones puras en TypeScript para formatos estrictos (`MED-` + 6 dígitos) y reglas de negocio por estado del medidor.
+* **Multimedia y Archivos:** `expo-image-picker` y `expo-file-system` (copia permanente de fotos al almacenamiento local de la app).
+* **Conectividad:** `expo-network` (detección en tiempo real y disparador de cola de sincronización).
 
-In the output, you'll find options to open the app in a
+---
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## 📋 Resumen de Requisitos Cumplidos (R1 – R10)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+| N° | Requisito del Cliente | Implementación Técnica |
+| :--- | :--- | :--- |
+| **R1** | Identificación de técnico y sesión persistente. | Credenciales técnicas quemadas en `src/config/tecnicos.ts` y controladas mediante rutas protegidas de Expo Router. |
+| **R2** | Formato de código de medidor (`MED-` + 6 dígitos). | Validación estricta con expresiones regulares (`validacion.ts`) que bloquea consultas con códigos incompletos. |
+| **R3** | Caché de medidores consultados y modo offline. | Almacenamiento local por jornada (`esDeHoy`), permitiendo reconsultar sin conexión de red. |
+| **R4** | Registro sin señal marcado como "pendiente de verificar". | Persistencia local con bandera de estado offline y recalculo automático al reconectar. |
+| **R5** | Reglas estrictas por estado (Normal, Inaccesible, Dañado). | Validación dinámica de campos obligatorios (lectura, motivo de acceso, descripción de daño). |
+| **R6** | Control de consumo anómalo (mayor al triple del promedio). | Cálculo automático, advertencia visual y confirmación de revisión obligatoria por parte del técnico. |
+| **R7** | Obligatoriedad y conservación de foto de respaldo. | Captura mediante cámara del sistema y copiado inmediato a la carpeta permanente de archivos (`expo-file-system`). |
+| **R8** | Recuperación de borradores ante cierres inesperados. | Persistencia instantánea de cambios de estado y eventos de ciclo de vida (`AppState`). |
+| **R9** | Sincronización automática al recuperar la señal sin duplicar. | Cola de envío FIFO con comprobación previa de existencia en el servidor mediante `clienteId` único. |
+| **R10**| Restricción de corrección y unicidad mensual por medidor. | Bloqueo de registros duplicados en el mismo mes (`AAAA-MM`) a nivel local y remoto. |
 
-## Get a fresh project
+---
 
-When you're ready, run:
+## 🚀 Guía de Instalación y Ejecución
 
+### Prerrequisitos
+* Node.js y npm instalados.
+* Expo CLI (`npx expo`).
+* Dispositivo móvil Android (con la app *Expo Go* o mediante el APK instalado) o emulador de Android Studio.
+
+### 1. Clonar el repositorio
 ```bash
-npm run reset-project
+git clone https://github.com/tu-usuario/eco-medidores.git
+cd eco-medidores
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### 2. Instalar dependencias
+```bash
+npm install
+```
 
-### Other setup steps
+### 3. Configurar variables de entorno (Opcional)
+Crea un archivo `.env` en la raíz basado en los endpoints de MockAPI (el proyecto incluye respaldos seguros por defecto en `api.ts`):
+```env
+EXPO_PUBLIC_URL_MEDIDORES=https://tu-cuenta-medidores.mockapi.io/medidores
+EXPO_PUBLIC_URL_LECTURAS=https://tu-cuenta-lecturas.mockapi.io/lecturas
+```
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+### 4. Ejecutar el servidor de desarrollo
+```bash
+npx expo start
+```
+* Escanea el código QR con la aplicación **Expo Go** en tu dispositivo Android o presiona `a` para abrir el emulador de Android.
 
-## Learn more
+---
 
-To learn more about developing your project with Expo, look at the following resources:
+## 📂 Estructura del Proyecto
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```text
+eco-medidores/
+├── docs/
+│   └── adr/                  # Registros de Decisiones de Arquitectura (ADR-001 al ADR-008)
+├── src/
+│   ├── app/                  # Enrutamiento basado en archivos (Expo Router)
+│   │   ├── (app)/            # Pantallas protegidas (Inicio, Registro [estado, foto, resumen])
+│   │   └── (auth)/           # Pantalla de Login institucional
+│   ├── componentes/          # Elementos visuales globales (Indicador de estado, etc.)
+│   ├── components/           # Piezas reutilizables (Tarjetas, Botones, Avisos, Filas)
+│   ├── config/               # Configuración de API (MockAPI) y técnicos
+│   ├── constants/            # Sistema de temas, colores corporativos y radios
+│   ├── contexto/             # Estado global (React Context + useReducer)
+│   ├── servicios/            # Lógica de negocio (Cálculos, red, http, persistencia de lecturas y envío)
+│   ├── storage/              # Interfaz de AsyncStorage (Claves por registro)
+│   └── validacion/           # Funciones puras de validación y tipos TypeScript
+└── package.json              # Dependencias optimizadas para SDK 57
+```
 
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+---
