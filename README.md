@@ -11,6 +11,25 @@ La aplicación resuelve el problema crítico de la **falta de conectividad celul
 
 ---
 
+## 🌐 Simulación del Sistema de Oficina (MockAPI)
+El backend corporativo está simulado mediante dos recursos independientes alojados en **MockAPI** (para optimizar los límites del plan gratuito):
+* **Recurso Medidores:** Consulta de información técnica de los suministros.
+* **Recurso Lecturas:** Recepción y almacenamiento de los registros de campo enviados por los técnicos.
+
+---
+
+## 🔑 Credenciales de Acceso (Datos Quemados)
+Para iniciar sesión en la aplicación (Requisito R1), utilice cualquiera de las siguientes credenciales de técnico asignado a ruta[cite: 3, 7]:
+
+* **Técnico 1:**
+  * **Código de empleado:** `EMP-001`
+  * **Clave de acceso:** `agua2026`
+* **Técnico 2:**
+  * **Código de empleado:** `EMP-002`
+  * **Clave de acceso:** `quito2026`
+
+---
+
 ##  Tecnologías y Decisiones Arquitectónicas (ADR)
 Siguiendo las directrices de la prueba, **no se han instalado librerías innecesarias** para evitar penalizaciones en la rúbrica. Cada dependencia está estrictamente justificada por un requisito del cliente y documentada mediante **Architecture Decision Records (ADR)** ubicados en la carpeta `docs/adr/`:
 
