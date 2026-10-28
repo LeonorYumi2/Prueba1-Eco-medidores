@@ -19,7 +19,7 @@ El backend corporativo está simulado mediante dos recursos independientes aloja
 ---
 
 ## 🔑 Credenciales de Acceso (Datos Quemados)
-Para iniciar sesión en la aplicación (Requisito R1), utilice cualquiera de las siguientes credenciales de técnico asignado a ruta[cite: 3, 7]:
+Para iniciar sesión en la aplicación (Requisito R1), utilice cualquiera de las siguientes credenciales de técnico asignado a ruta:
 
 * **Técnico 1:**
   * **Código de empleado:** `EMP-001`
