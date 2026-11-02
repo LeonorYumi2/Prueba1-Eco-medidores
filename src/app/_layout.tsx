@@ -1,3 +1,5 @@
+import { useIsRestoring } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -5,18 +7,23 @@ import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { IndicadorEstado } from '../componentes/IndicadorEstado';
 import { AppProvider, useApp } from '../contexto/AppContext';
+import { opcionesPersistencia, queryClient } from '../servicios/clienteConsultas';
 
-// La pantalla de carga se mantiene hasta saber si hay sesión guardada.
+// La pantalla de carga se mantiene hasta saber si hay sesión guardada y terminar la restauración de la caché (ADR-001, ADR-003).
 SplashScreen.preventAutoHideAsync();
 
 function Navegacion() {
   const { estado } = useApp();
+  // useIsRestoring indica si PersistQueryClientProvider sigue leyendo la caché desde AsyncStorage.
+  const restaurandoCache = useIsRestoring();
+
+  const cargando = estado.cargandoSesion || restaurandoCache;
 
   useEffect(() => {
-    if (!estado.cargandoSesion) SplashScreen.hideAsync();
-  }, [estado.cargandoSesion]);
+    if (!cargando) SplashScreen.hideAsync();
+  }, [cargando]);
 
-  if (estado.cargandoSesion) return null;
+  if (cargando) return null;
 
   const haySesion = estado.sesion !== null;
   return (
@@ -37,9 +44,11 @@ function Navegacion() {
 
 export default function RootLayout() {
   return (
-    <AppProvider>
-      <Navegacion />
-    </AppProvider>
+    <PersistQueryClientProvider client={queryClient} persistOptions={opcionesPersistencia}>
+      <AppProvider>
+        <Navegacion />
+      </AppProvider>
+    </PersistQueryClientProvider>
   );
 }
 

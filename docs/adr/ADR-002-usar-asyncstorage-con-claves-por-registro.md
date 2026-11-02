@@ -42,7 +42,7 @@ Se usa **AsyncStorage con una clave por registro**, sin una lista única compart
 | Clave                    | Contenido                                                                                                        |
 | ------------------------ | ---------------------------------------------------------------------------------------------------------------- |
 | `sesion`                 | Código del técnico. Nunca la clave. Se elimina al cerrar sesión.                                                 |
-| `medidor:{codigo}`       | Datos del medidor tal como los devolvió el sistema de la oficina, más la fecha en que se consultaron.            |
+| `medidor:{codigo}`       | (ya no se usa) La caché de medidores la gestiona TanStack Query, ver ADR-003.            |
 | `lectura:{codigo}:{mes}` | Una lectura, con su estado (pendiente o enviada), el `clienteId` generado en el teléfono y los datos de R4 a R7. |
 | `borrador`               | El registro incompleto de R8. Una sola clave: solo puede haber un registro a medias a la vez.                    |
 

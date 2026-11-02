@@ -25,7 +25,6 @@ export type Medidor = {
   consumoPromedio: number;
 };
 
-export type MedidorGuardado = { medidor: Medidor; consultadoEn: number }; // consultadoEn en milisegundos
 export type Sesion = { codigo: string };
 
 const esObjeto = (x: unknown): x is Record<string, unknown> => typeof x === 'object' && x !== null;
@@ -56,10 +55,6 @@ export function normalizarMedidor(x: unknown): Medidor | null {
     consumoPromedio: Number(x.consumoPromedio),
   };
   return esMedidor(candidato) ? candidato : null;
-}
-
-export function esMedidorGuardado(x: unknown): x is MedidorGuardado {
-  return esObjeto(x) && esNumero(x.consultadoEn) && esMedidor(x.medidor);
 }
 
 export function esSesion(x: unknown): x is Sesion {

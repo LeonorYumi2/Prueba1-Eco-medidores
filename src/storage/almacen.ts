@@ -6,7 +6,6 @@ export const PREFIJO_LECTURA = 'lectura:';
 export const claves = {
   sesion: 'sesion',
   borrador: 'borrador',
-  medidor: (codigo: string) => `medidor:${codigo}`,
   lectura: (codigo: string, mes: string) => `${PREFIJO_LECTURA}${codigo}:${mes}`,
 } as const;
 

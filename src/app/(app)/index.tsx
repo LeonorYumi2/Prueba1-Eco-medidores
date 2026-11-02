@@ -22,7 +22,12 @@ import {
     listarLecturas,
     mesActual,
 } from "../../servicios/lecturas";
-import { ResultadoConsulta, consultarMedidor } from "../../servicios/medidores";
+import { queryClient } from "../../servicios/clienteConsultas";
+import {
+    claveMedidor,
+    esDeHoy,
+    useConsultaMedidor,
+} from "../../servicios/medidores";
 import {
     Borrador,
     Lectura,
@@ -82,11 +87,12 @@ export default function Inicio() {
   const { estado, cerrarSesion, iniciarBorrador, descartarBorrador } = useApp();
   const [codigo, setCodigo] = useState("");
   const [errorCodigo, setErrorCodigo] = useState<string | null>(null);
-  const [consultando, setConsultando] = useState(false);
-  const [resultado, setResultado] = useState<ResultadoConsulta | null>(null);
   const [codigoConsultado, setCodigoConsultado] = useState<string | null>(null);
   const [existente, setExistente] = useState<Lectura | null>(null);
   const [lecturas, setLecturas] = useState<Lectura[]>([]);
+
+  // useConsultaMedidor sustituye la llamada directa a consultarMedidor y los estados resultado y consultando (ADR-003).
+  const { cargando: consultando, resultado, refetch } = useConsultaMedidor(codigoConsultado);
 
   const refrescarLecturas = useCallback(async () => {
     setLecturas(await listarLecturas());
@@ -101,6 +107,22 @@ export default function Inicio() {
     }, [refrescarLecturas]),
   );
 
+  // Sincroniza la lectura existente en el mes actual al obtener el resultado de la consulta.
+  useEffect(() => {
+    let activo = true;
+    const buscarExistente = async () => {
+      const lec =
+        !codigoConsultado || !resultado || resultado.tipo === "no-existe"
+          ? null
+          : await leerLectura(codigoConsultado, mesActual());
+      if (activo) setExistente(lec);
+    };
+    void buscarExistente();
+    return () => {
+      activo = false;
+    };
+  }, [codigoConsultado, resultado]);
+
   // El envío actualiza el contador al terminar; la microtarea evita sincronizar
   // setState desde el efecto y refresca la lista solo ante ese cambio.
   useEffect(() => {
@@ -110,25 +132,24 @@ export default function Inicio() {
   }, [estado.pendientes, refrescarLecturas]);
 
   async function consultar() {
-    setResultado(null);
-    setExistente(null);
     // R2: con un código inválido NO se hace ninguna consulta.
     if (!codigoMedidorValido(codigo)) {
       setErrorCodigo(MENSAJES.codigoInvalido);
       return;
     }
     setErrorCodigo(null);
-    setConsultando(true);
     const codigoFinal = codigo.trim();
-    const consulta = await consultarMedidor(codigoFinal);
-    setCodigoConsultado(codigoFinal);
-    setExistente(
-      consulta.tipo === "no-existe"
-        ? null
-        : await leerLectura(codigoFinal, mesActual()),
-    );
-    setResultado(consulta);
-    setConsultando(false);
+
+    if (codigoFinal === codigoConsultado) {
+      // Al pulsar Consultar con un código ya consultado, volver a evaluar la vigencia (refrescar solo si el dato no es de hoy).
+      const estadoQuery = queryClient.getQueryState(claveMedidor(codigoFinal));
+      const dataUpdatedAt = estadoQuery?.dataUpdatedAt ?? 0;
+      if (!dataUpdatedAt || !esDeHoy(dataUpdatedAt) || estadoQuery?.status === "error") {
+        void refetch();
+      }
+    } else {
+      setCodigoConsultado(codigoFinal);
+    }
   }
 
   // Arma el borrador (nuevo o de una lectura pendiente que se corrige) y abre el registro.
