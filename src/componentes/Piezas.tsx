@@ -1,4 +1,4 @@
-// Piezas visuales reutilizables con identidad corporativa EPMAPS ("Clean UI / Alto Contraste").
+// Piezas visuales reutilizables con identidad institucional EPMAPS.
 import { ReactNode } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 import { tema } from '../constants/tema';
@@ -6,19 +6,22 @@ import { tema } from '../constants/tema';
 export function Aviso({ texto, tipo }: { texto: string; tipo: 'info' | 'aviso' | 'error' }) {
   const configuracion = {
     info: {
-      fondo: tema.colores.informacionFondo,
-      texto: tema.colores.informacion,
-      borde: tema.colores.informacionBorde,
+      fondo: tema.colores.infoFondo,
+      texto: tema.colores.infoTexto,
+      borde: tema.colores.infoBorde,
+      icono: 'ℹ',
     },
     aviso: {
-      fondo: tema.colores.avisoFondo, // #FFF3CD
-      texto: tema.colores.aviso, // #856404
-      borde: tema.colores.avisoBorde, // #FFEEBA
+      fondo: tema.colores.calidoFondo,
+      texto: tema.colores.calidoTexto,
+      borde: tema.colores.calidoBorde,
+      icono: '▲',
     },
     error: {
-      fondo: tema.colores.errorFondo, // #F8D7DA
-      texto: tema.colores.errorTexto, // #721C24
-      borde: tema.colores.errorBorde,
+      fondo: tema.colores.criticoFondo,
+      texto: tema.colores.criticoTexto,
+      borde: tema.colores.criticoBorde,
+      icono: '✕',
     },
   }[tipo];
 
@@ -32,6 +35,9 @@ export function Aviso({ texto, tipo }: { texto: string; tipo: 'info' | 'aviso' |
         },
       ]}
     >
+      <Text style={[estilos.iconoAviso, { color: configuracion.texto }]}>
+        {configuracion.icono}
+      </Text>
       <Text style={[estilos.textoAviso, { color: configuracion.texto }]}>{texto}</Text>
     </View>
   );
@@ -58,23 +64,35 @@ type PropsBoton = {
   variante?: 'principal' | 'secundario' | 'peligro';
 };
 
-export function Boton({ texto, onPress, cargando, deshabilitado, variante = 'principal' }: PropsBoton) {
+export function Boton({
+  texto,
+  onPress,
+  cargando,
+  deshabilitado,
+  variante = 'principal',
+}: PropsBoton) {
   const fondo = {
-    principal: tema.colores.primario, // #00529B
-    secundario: tema.colores.superficie, // #FFFFFF
-    peligro: '#FFF5F5',
+    principal: tema.colores.primario,
+    secundario: tema.colores.superficie,
+    peligro: tema.colores.criticoFondo,
   }[variante];
 
   const colorTexto = {
     principal: '#FFFFFF',
-    secundario: tema.colores.primario,
-    peligro: tema.colores.error,
+    secundario: tema.colores.textoPrincipal,
+    peligro: tema.colores.critico,
   }[variante];
 
   const borde = {
     principal: tema.colores.primario,
     secundario: tema.colores.primario,
-    peligro: tema.colores.error,
+    peligro: tema.colores.critico,
+  }[variante];
+
+  const fondoPresionado = {
+    principal: tema.colores.primarioPresionado,
+    secundario: tema.colores.infoFondo,
+    peligro: '#FCE0E5',
   }[variante];
 
   const inactivo = Boolean(cargando || deshabilitado);
@@ -86,11 +104,10 @@ export function Boton({ texto, onPress, cargando, deshabilitado, variante = 'pri
       style={({ pressed }) => [
         estilos.boton,
         {
-          backgroundColor: pressed && variante === 'principal' ? tema.colores.primarioOscuro : fondo,
+          backgroundColor: pressed ? fondoPresionado : fondo,
           borderColor: borde,
         },
-        pressed && variante !== 'principal' && { opacity: 0.8 },
-        inactivo && { opacity: 0.45 },
+        inactivo && estilos.botonDeshabilitado,
       ]}
     >
       {cargando ? (
@@ -113,13 +130,19 @@ export function BarraSuperior({
 }) {
   return (
     <View style={estilos.barra}>
-      {onVolver && (
-        <Pressable onPress={onVolver} hitSlop={12} style={estilos.volver}>
-          <Text style={estilos.textoVolver}>← Volver</Text>
-        </Pressable>
-      )}
-      <Text style={estilos.barraTitulo}>{titulo}</Text>
-      {subtitulo ? <Text style={estilos.barraSub}>{subtitulo}</Text> : null}
+      {/* Círculos translúcidos decorativos inspirados en ondas de agua */}
+      <View style={estilos.gotaOnda1} />
+      <View style={estilos.gotaOnda2} />
+
+      <View style={estilos.contenidoBarra}>
+        {onVolver && (
+          <Pressable onPress={onVolver} hitSlop={12} style={estilos.volver}>
+            <Text style={estilos.textoVolver}>← Volver</Text>
+          </Pressable>
+        )}
+        <Text style={estilos.barraTitulo}>{titulo}</Text>
+        {subtitulo ? <Text style={estilos.barraSub}>{subtitulo}</Text> : null}
+      </View>
     </View>
   );
 }
@@ -127,44 +150,53 @@ export function BarraSuperior({
 const estilos = StyleSheet.create({
   aviso: {
     borderRadius: tema.radio,
-    borderWidth: 1,
+    borderWidth: 1.5,
     paddingHorizontal: 16,
     paddingVertical: 14,
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  iconoAviso: {
+    fontSize: 14,
+    fontWeight: '800',
+    marginTop: 2,
   },
   textoAviso: {
+    flex: 1,
     fontSize: 14,
     lineHeight: 20,
     fontWeight: '600',
   },
   fila: {
     borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
+    borderTopColor: tema.colores.fondoSuave,
     paddingTop: 10,
-    gap: 4,
+    gap: 3,
   },
   etiquetaFila: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '700',
-    color: tema.colores.textoSuave, // #6C757D
+    color: tema.colores.textoSecundario,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
   },
   valorFila: {
     fontSize: 16,
-    fontWeight: '600',
-    color: tema.colores.texto, // #1A1A1A
+    fontWeight: '700',
+    color: tema.colores.textoPrincipal,
     lineHeight: 22,
   },
   tarjeta: {
-    backgroundColor: tema.colores.superficie, // #FFFFFF
+    backgroundColor: tema.colores.superficie,
     borderRadius: tema.radio,
     padding: 20,
     gap: 14,
-    borderWidth: 1,
-    borderColor: tema.colores.borde, // #E2E8F0
+    borderWidth: 1.5,
+    borderColor: tema.colores.neutro,
   },
   boton: {
-    borderRadius: tema.radio,
+    borderRadius: tema.radioBoton,
     paddingVertical: 15,
     paddingHorizontal: 20,
     alignItems: 'center',
@@ -172,15 +204,44 @@ const estilos = StyleSheet.create({
     borderWidth: 1.5,
     minHeight: 52,
   },
+  botonDeshabilitado: {
+    opacity: 0.45,
+    borderColor: tema.colores.neutro,
+  },
   textoBoton: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: '800',
     letterSpacing: 0.3,
   },
   barra: {
-    backgroundColor: tema.colores.primario, // #00529B
+    backgroundColor: tema.colores.primario,
     paddingHorizontal: 20,
-    paddingVertical: 14,
+    paddingTop: 12,
+    paddingBottom: 16,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    overflow: 'hidden',
+  },
+  gotaOnda1: {
+    position: 'absolute',
+    top: -20,
+    right: -20,
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
+  },
+  gotaOnda2: {
+    position: 'absolute',
+    bottom: -30,
+    left: '25%',
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: 'rgba(212, 230, 243, 0.1)',
+  },
+  contenidoBarra: {
+    zIndex: 1,
     gap: 4,
   },
   volver: {
@@ -190,7 +251,7 @@ const estilos = StyleSheet.create({
     marginBottom: 4,
   },
   textoVolver: {
-    color: '#E0ECF8',
+    color: '#FFFFFF',
     fontSize: 14,
     fontWeight: '700',
   },
@@ -201,8 +262,8 @@ const estilos = StyleSheet.create({
     letterSpacing: 0.2,
   },
   barraSub: {
-    color: '#E0ECF8',
+    color: tema.colores.fondoSuave,
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: '600',
   },
 });

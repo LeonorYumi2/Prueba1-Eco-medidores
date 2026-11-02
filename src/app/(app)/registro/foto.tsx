@@ -122,8 +122,7 @@ function CapturaFoto({ borrador }: { borrador: Borrador }) {
             <View style={{ flex: 1 }}>
               <Text style={estilos.titulo}>Evidencia fotográfica</Text>
               <Text style={estilos.descripcion}>
-                Capture una toma clara y enfocada de la carátula del medidor y
-                su contador.
+                Capture una toma clara y enfocada de la carátula del medidor y su contador.
               </Text>
             </View>
             <View
@@ -137,7 +136,7 @@ function CapturaFoto({ borrador }: { borrador: Borrador }) {
                   obligatoria ? estilos.textoRequerida : estilos.textoOpcional
                 }
               >
-                {obligatoria ? "Obligatoria" : "Opcional"}
+                {obligatoria ? "▲ Obligatoria" : "• Opcional"}
               </Text>
             </View>
           </View>
@@ -159,11 +158,11 @@ function CapturaFoto({ borrador }: { borrador: Borrador }) {
                 disabled={guardando}
                 style={({ pressed }) => [
                   estilos.botonCambiar,
-                  pressed && { opacity: 0.8 },
+                  pressed && { backgroundColor: tema.colores.fondoSuave },
                 ]}
               >
                 <Text style={estilos.textoCambiar}>
-                  {guardando ? "Guardando…" : "Tomar otra foto"}
+                  {guardando ? "Guardando…" : "Tomar otra fotografía"}
                 </Text>
               </Pressable>
             </View>
@@ -173,17 +172,14 @@ function CapturaFoto({ borrador }: { borrador: Borrador }) {
                 <Text style={estilos.textoIcono}>FOTO</Text>
               </View>
               <View style={estilos.textosZonaCaptura}>
-                <Text style={estilos.textoVacio}>
-                  Aún no se ha tomado una foto
-                </Text>
+                <Text style={estilos.textoVacio}>Aún no se ha tomado una foto</Text>
                 <Text style={estilos.textoAyudaCaptura}>
-                  Asegure buena iluminación para garantizar la legibilidad en
-                  auditoría.
+                  Asegure buena iluminación para garantizar la legibilidad en auditoría.
                 </Text>
               </View>
               <View style={estilos.anchoBotonFoto}>
                 <Boton
-                  texto="Tomar foto"
+                  texto="Tomar foto con la cámara"
                   onPress={tomarFoto}
                   cargando={guardando}
                 />
@@ -232,6 +228,7 @@ const estilos = StyleSheet.create({
     padding: 18,
     gap: 16,
     justifyContent: "space-between",
+    paddingBottom: 20,
   },
   encabezadoTarjeta: {
     flexDirection: "row",
@@ -239,52 +236,54 @@ const estilos = StyleSheet.create({
     gap: 12,
   },
   titulo: {
-    color: tema.colores.texto,
+    color: tema.colores.textoPrincipal,
     fontSize: 18,
     fontWeight: "800",
     letterSpacing: 0.2,
   },
   descripcion: {
-    color: tema.colores.textoSuave,
+    color: tema.colores.textoSecundario,
     fontSize: 14,
     lineHeight: 20,
     marginTop: 4,
   },
   etiquetaRequerida: {
-    borderRadius: 8,
+    borderRadius: tema.radioPill,
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderWidth: 1,
+    borderWidth: 1.5,
   },
   requerida: {
-    backgroundColor: tema.colores.errorFondo,
-    borderColor: tema.colores.errorBorde,
+    backgroundColor: tema.colores.criticoFondo,
+    borderColor: tema.colores.criticoBorde,
   },
   opcional: {
-    backgroundColor: tema.colores.informacionFondo,
-    borderColor: tema.colores.informacionBorde,
+    backgroundColor: tema.colores.infoFondo,
+    borderColor: tema.colores.infoBorde,
   },
   textoRequerida: {
-    color: tema.colores.error,
-    fontSize: 12,
+    color: tema.colores.criticoTexto,
+    fontSize: 11,
     fontWeight: "800",
+    letterSpacing: 0.4,
   },
   textoOpcional: {
-    color: tema.colores.primario,
-    fontSize: 12,
+    color: tema.colores.textoPrincipal,
+    fontSize: 11,
     fontWeight: "800",
+    letterSpacing: 0.4,
   },
   contenedorPreview: {
     marginTop: 6,
     gap: 12,
   },
   marcoFoto: {
-    height: 250,
+    height: 240,
     borderRadius: tema.radio,
     overflow: "hidden",
     backgroundColor: "#000000",
     borderWidth: 1.5,
-    borderColor: tema.colores.borde,
+    borderColor: tema.colores.neutro,
   },
   preview: {
     width: "100%",
@@ -294,20 +293,20 @@ const estilos = StyleSheet.create({
     position: "absolute",
     top: 12,
     right: 12,
-    backgroundColor: "rgba(26, 26, 26, 0.9)",
-    borderRadius: 999,
+    backgroundColor: "rgba(39, 53, 124, 0.9)",
+    borderRadius: tema.radioPill,
     paddingHorizontal: 12,
     paddingVertical: 6,
   },
   textoInsignia: {
     color: "#FFFFFF",
     fontSize: 12,
-    fontWeight: "700",
+    fontWeight: "800",
   },
   botonCambiar: {
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: tema.radio,
+    borderRadius: tema.radioBoton,
     borderWidth: 1.5,
     borderColor: tema.colores.primario,
     backgroundColor: tema.colores.superficie,
@@ -315,18 +314,18 @@ const estilos = StyleSheet.create({
     minHeight: 50,
   },
   textoCambiar: {
-    color: tema.colores.primario,
+    color: tema.colores.textoPrincipal,
     fontSize: 15,
-    fontWeight: "700",
+    fontWeight: "800",
   },
   zonaCaptura: {
     alignItems: "center",
     gap: 14,
     borderWidth: 2,
     borderStyle: "dashed",
-    borderColor: "#CBD5E1",
+    borderColor: tema.colores.neutro,
     borderRadius: tema.radio,
-    backgroundColor: tema.colores.campoFondo,
+    backgroundColor: tema.colores.fondo,
     padding: 24,
     marginTop: 6,
   },
@@ -336,29 +335,30 @@ const estilos = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderRadius: 30,
-    backgroundColor: tema.colores.informacionFondo,
-    borderWidth: 1,
-    borderColor: tema.colores.informacionBorde,
+    backgroundColor: tema.colores.fondoSuave,
+    borderWidth: 1.5,
+    borderColor: tema.colores.primario,
   },
   textoIcono: {
-    color: tema.colores.primario,
+    color: tema.colores.textoPrincipal,
     fontSize: 12,
     fontWeight: "900",
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
   },
   textosZonaCaptura: {
     alignItems: "center",
     gap: 4,
   },
   textoVacio: {
-    color: tema.colores.texto,
+    color: tema.colores.textoPrincipal,
     fontSize: 16,
-    fontWeight: "700",
+    fontWeight: "800",
   },
   textoAyudaCaptura: {
-    color: tema.colores.textoSuave,
+    color: tema.colores.textoSecundario,
     fontSize: 13,
     textAlign: "center",
+    lineHeight: 18,
   },
   anchoBotonFoto: {
     width: "100%",

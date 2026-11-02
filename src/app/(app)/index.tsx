@@ -1,39 +1,40 @@
 // R2 y R3: consulta de medidores. R4, R8, R10: punto de partida del registro.
+import { Image } from "expo-image";
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    View,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Aviso, Boton, Fila, Tarjeta } from "../../componentes/Piezas";
 import { tema } from "../../constants/tema";
 import { useApp } from "../../contexto/AppContext";
 import { irA } from "../../rutas";
-import {
-    generarClienteId,
-    leerLectura,
-    listarLecturas,
-    mesActual,
-} from "../../servicios/lecturas";
 import { queryClient } from "../../servicios/clienteConsultas";
 import {
-    claveMedidor,
-    esDeHoy,
-    useConsultaMedidor,
+  generarClienteId,
+  leerLectura,
+  listarLecturas,
+  mesActual,
+} from "../../servicios/lecturas";
+import {
+  claveMedidor,
+  esDeHoy,
+  useConsultaMedidor,
 } from "../../servicios/medidores";
 import {
-    Borrador,
-    Lectura,
-    MENSAJES,
-    Medidor,
-    codigoMedidorValido,
+  Borrador,
+  Lectura,
+  MENSAJES,
+  Medidor,
+  codigoMedidorValido,
 } from "../../validacion/validacion";
 
 const dosDigitos = (n: number) => String(n).padStart(2, "0");
@@ -53,33 +54,33 @@ function etiquetaEnvio(l: Lectura): {
 } {
   if (l.envio === "enviada") {
     return {
-      texto: "Enviada",
-      color: tema.colores.exito,
-      fondo: tema.colores.exitoFondo,
-      borde: tema.colores.exitoBorde,
+      texto: "✓ Enviada",
+      color: tema.colores.enviadaTexto,
+      fondo: tema.colores.enviadaFondo,
+      borde: tema.colores.enviadaBorde,
     };
   }
   if (l.envio === "conflicto") {
     return {
-      texto: "En conflicto",
-      color: tema.colores.error,
-      fondo: tema.colores.errorFondo,
-      borde: tema.colores.errorBorde,
+      texto: "✕ En conflicto",
+      color: tema.colores.criticoTexto,
+      fondo: tema.colores.criticoFondo,
+      borde: tema.colores.criticoBorde,
     };
   }
   if (!l.verificada) {
     return {
-      texto: "Por verificar",
-      color: tema.colores.aviso,
-      fondo: tema.colores.avisoFondo,
-      borde: tema.colores.avisoBorde,
+      texto: "◷ Por verificar",
+      color: tema.colores.calidoTexto,
+      fondo: tema.colores.calidoFondo,
+      borde: tema.colores.calidoBorde,
     };
   }
   return {
-    texto: "Por enviar",
-    color: tema.colores.informacion,
-    fondo: tema.colores.informacionFondo,
-    borde: tema.colores.informacionBorde,
+    texto: "↑ Por enviar",
+    color: tema.colores.textoPrincipal,
+    fondo: tema.colores.fondoSuave,
+    borde: tema.colores.primario,
   };
 }
 
@@ -250,25 +251,35 @@ export default function Inicio() {
 
   return (
     <SafeAreaView style={estilos.pantalla} edges={["top", "left", "right"]}>
-      {/* Encabezado institucional EPMAPS */}
+      {/* Encabezado institucional EPMAPS con logo y ondas de agua */}
       <View style={estilos.barra}>
-        <View style={estilos.infoUsuario}>
-          <Text style={estilos.barraTitulo}>EcoMedidores</Text>
-          <Text style={estilos.barraSub}>
-            Técnico {estado.sesion?.codigo} · {estado.pendientes} pendiente
-            {estado.pendientes === 1 ? "" : "s"}
-          </Text>
+        <View style={estilos.gotaOnda1} />
+        <View style={estilos.gotaOnda2} />
+
+        <View style={estilos.filaCabecera}>
+          <Image
+            source={require("../../../assets/images/logo-escudo.png")}
+            style={estilos.escudoCabecera}
+            contentFit="contain"
+          />
+          <View style={estilos.infoUsuario}>
+            <Text style={estilos.barraTitulo}>EcoMedidores</Text>
+            <Text style={estilos.barraSub}>
+              Técnico {estado.sesion?.codigo} · {estado.pendientes} pendiente
+              {estado.pendientes === 1 ? "" : "s"}
+            </Text>
+          </View>
+          <Pressable
+            onPress={cerrarSesion}
+            style={({ pressed }) => [
+              estilos.botonSalir,
+              pressed && { opacity: 0.8 },
+            ]}
+            hitSlop={8}
+          >
+            <Text style={estilos.textoBotonSalir}>Salir</Text>
+          </Pressable>
         </View>
-        <Pressable
-          onPress={cerrarSesion}
-          style={({ pressed }) => [
-            estilos.botonSalir,
-            pressed && { opacity: 0.8 },
-          ]}
-          hitSlop={8}
-        >
-          <Text style={estilos.textoBotonSalir}>Salir</Text>
-        </Pressable>
       </View>
 
       <KeyboardAvoidingView
@@ -285,11 +296,9 @@ export default function Inicio() {
             <Tarjeta>
               <View style={estilos.cabeceraBorrador}>
                 <View style={estilos.badgeBorrador}>
-                  <Text style={estilos.textoBadgeBorrador}>En curso</Text>
+                  <Text style={estilos.textoBadgeBorrador}>◷ EN CURSO</Text>
                 </View>
-                <Text style={estilos.tituloBorrador}>
-                  Registro sin terminar
-                </Text>
+                <Text style={estilos.tituloBorrador}>Registro sin terminar</Text>
               </View>
               <Text style={estilos.texto}>
                 Medidor{" "}
@@ -313,8 +322,7 @@ export default function Inicio() {
           <Tarjeta>
             <Text style={estilos.titulo}>Consultar medidor</Text>
             <Text style={estilos.descripcionCampo}>
-              Ingrese el código para verificar el estado de la cuenta y lecturas
-              registradas.
+              Ingrese el código para verificar el estado de la cuenta y lecturas registradas.
             </Text>
             <TextInput
               style={[estilos.campo, errorCodigo && estilos.campoError]}
@@ -324,7 +332,7 @@ export default function Inicio() {
                 setErrorCodigo(null);
               }}
               placeholder="MED-100001"
-              placeholderTextColor={tema.colores.textoSuave}
+              placeholderTextColor={tema.colores.neutro}
               autoCapitalize="characters"
               autoCorrect={false}
               maxLength={10}
@@ -350,21 +358,19 @@ export default function Inicio() {
             />
           )}
 
-          {/* Ficha técnica del medidor consultado */}
+          {/* Ficha técnica del medidor consultado (7 datos visibles) */}
           {resultado?.tipo === "ok" && (
             <Tarjeta>
               <View style={estilos.cabeceraResultado}>
                 <View style={{ flex: 1 }}>
-                  <Text style={estilos.subtituloMedidor}>
-                    Medidor consultado
-                  </Text>
+                  <Text style={estilos.subtituloMedidor}>FICHA TÉCNICA DEL MEDIDOR</Text>
                   <Text style={estilos.codigoMedidor}>
                     {resultado.medidor.codigo}
                   </Text>
                 </View>
                 <View style={estilos.badgeEstadoMedidor}>
                   <Text style={estilos.textoBadgeEstadoMedidor}>
-                    {resultado.medidor.estado.toUpperCase()}
+                    • {resultado.medidor.estado.toUpperCase()}
                   </Text>
                 </View>
               </View>
@@ -381,14 +387,18 @@ export default function Inicio() {
                 />
               ) : null}
 
-              <Fila etiqueta="Dirección" valor={resultado.medidor.direccion} />
-              <Fila etiqueta="Sector" valor={resultado.medidor.sector} />
+              <Fila etiqueta="Dirección del predio" valor={resultado.medidor.direccion} />
+              <Fila etiqueta="Sector de distribución" valor={resultado.medidor.sector} />
               <Fila
                 etiqueta="Número de cuenta"
                 valor={resultado.medidor.numeroCuenta}
               />
               <Fila
-                etiqueta="Última lectura"
+                etiqueta="Estado operativo"
+                valor={resultado.medidor.estado}
+              />
+              <Fila
+                etiqueta="Última lectura registrada"
                 valor={`${resultado.medidor.ultimaLectura} m³ (${fechaDeSegundos(resultado.medidor.fechaUltimaLectura)})`}
               />
               <Fila
@@ -404,11 +414,11 @@ export default function Inicio() {
           {lecturas.length > 0 && (
             <View style={estilos.seccionHistorial}>
               <View style={estilos.cabeceraHistorial}>
-                <Text style={estilos.tituloSeccion}>Lecturas registradas</Text>
+                <Text style={estilos.tituloSeccion}>Bitácora de lecturas</Text>
                 <View style={estilos.contadorHistorial}>
                   <Text style={estilos.textoContadorHistorial}>
                     {lecturas.length}{" "}
-                    {lecturas.length === 1 ? "lectura" : "lecturas"}
+                    {lecturas.length === 1 ? "registro" : "registros"}
                   </Text>
                 </View>
               </View>
@@ -452,13 +462,13 @@ export default function Inicio() {
 
                       <View style={estilos.cuerpoLectura}>
                         <View style={estilos.columnaDato}>
-                          <Text style={estilos.etiquetaDato}>Estado</Text>
+                          <Text style={estilos.etiquetaDato}>Condición</Text>
                           <Text style={estilos.valorDato}>
                             {l.estadoMedidor === "normal"
-                              ? "Normal"
+                              ? "• Normal"
                               : l.estadoMedidor === "inaccesible"
-                                ? "Inaccesible"
-                                : "Dañado"}
+                                ? "⊘ Inaccesible"
+                                : "▲ Dañado"}
                           </Text>
                         </View>
 
@@ -474,7 +484,7 @@ export default function Inicio() {
                         {l.anomalo && (
                           <View style={estilos.badgeAnomalo}>
                             <Text style={estilos.textoBadgeAnomalo}>
-                              Anómalo
+                              ▲ Anómalo
                             </Text>
                           </View>
                         )}
@@ -497,13 +507,42 @@ const estilos = StyleSheet.create({
     backgroundColor: tema.colores.fondo,
   },
   barra: {
-    backgroundColor: tema.colores.primario, // #00529B
+    backgroundColor: tema.colores.primario,
     paddingHorizontal: 20,
-    paddingVertical: 14,
+    paddingTop: 12,
+    paddingBottom: 16,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+    overflow: "hidden",
+    position: "relative",
+  },
+  gotaOnda1: {
+    position: "absolute",
+    top: -20,
+    right: -20,
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+  },
+  gotaOnda2: {
+    position: "absolute",
+    bottom: -30,
+    left: "20%",
+    width: 90,
+    height: 90,
+    borderRadius: 45,
+    backgroundColor: "rgba(212, 230, 243, 0.1)",
+  },
+  filaCabecera: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
     gap: 12,
+    zIndex: 1,
+  },
+  escudoCabecera: {
+    width: 32,
+    height: 46,
   },
   infoUsuario: {
     flex: 1,
@@ -516,63 +555,63 @@ const estilos = StyleSheet.create({
     letterSpacing: 0.3,
   },
   barraSub: {
-    color: "#E0ECF8",
+    color: tema.colores.fondoSuave,
     fontSize: 13,
-    fontWeight: "500",
+    fontWeight: "600",
   },
   botonSalir: {
     borderWidth: 1.5,
-    borderColor: "rgba(255, 255, 255, 0.4)",
-    backgroundColor: "rgba(255, 255, 255, 0.12)",
+    borderColor: "rgba(255, 255, 255, 0.35)",
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: 8,
+    borderRadius: tema.radioBoton,
   },
   textoBotonSalir: {
     color: "#FFFFFF",
     fontSize: 13,
-    fontWeight: "700",
+    fontWeight: "800",
   },
   contenido: {
     padding: 18,
     gap: 16,
-    paddingBottom: 24,
+    paddingBottom: 36,
   },
   titulo: {
     fontSize: 18,
     fontWeight: "800",
-    color: tema.colores.texto, // #1A1A1A
+    color: tema.colores.textoPrincipal,
     letterSpacing: 0.2,
   },
   descripcionCampo: {
     fontSize: 14,
-    color: tema.colores.textoSuave, // #6C757D
+    color: tema.colores.textoSecundario,
     lineHeight: 20,
   },
   texto: {
     fontSize: 14,
-    color: tema.colores.textoSuave,
+    color: tema.colores.textoSecundario,
     lineHeight: 20,
   },
   negrita: {
-    fontWeight: "700",
-    color: tema.colores.texto,
+    fontWeight: "800",
+    color: tema.colores.textoPrincipal,
   },
   campo: {
     borderWidth: 1.5,
-    borderColor: tema.colores.borde,
-    borderRadius: tema.radio,
+    borderColor: tema.colores.neutro,
+    borderRadius: tema.radioBoton,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 20,
     letterSpacing: 1.5,
-    fontWeight: "700",
-    color: tema.colores.texto, // #1A1A1A
-    backgroundColor: tema.colores.campoFondo, // #F8F9FA
+    fontWeight: "800",
+    color: tema.colores.textoPrincipal,
+    backgroundColor: tema.colores.fondo,
   },
   campoError: {
-    borderColor: tema.colores.error,
-    backgroundColor: tema.colores.errorFondo,
+    borderColor: tema.colores.critico,
+    backgroundColor: tema.colores.criticoFondo,
   },
   cabeceraBorrador: {
     flexDirection: "row",
@@ -580,22 +619,23 @@ const estilos = StyleSheet.create({
     gap: 10,
   },
   badgeBorrador: {
-    backgroundColor: tema.colores.avisoFondo,
-    borderColor: tema.colores.avisoBorde,
-    borderWidth: 1,
-    paddingHorizontal: 8,
+    backgroundColor: tema.colores.calidoFondo,
+    borderColor: tema.colores.calidoBorde,
+    borderWidth: 1.5,
+    paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: tema.radioPill,
   },
   textoBadgeBorrador: {
-    color: tema.colores.aviso,
-    fontSize: 12,
+    color: tema.colores.calidoTexto,
+    fontSize: 11,
     fontWeight: "800",
+    letterSpacing: 0.5,
   },
   tituloBorrador: {
     fontSize: 17,
     fontWeight: "800",
-    color: tema.colores.texto,
+    color: tema.colores.textoPrincipal,
   },
   accionesBorrador: {
     gap: 10,
@@ -608,29 +648,29 @@ const estilos = StyleSheet.create({
     gap: 12,
   },
   subtituloMedidor: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: tema.colores.textoSuave,
+    fontSize: 11,
+    fontWeight: "800",
+    color: tema.colores.textoSecundario,
     textTransform: "uppercase",
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
   },
   codigoMedidor: {
-    fontSize: 24,
-    fontWeight: "800",
-    color: tema.colores.primario, // #00529B
+    fontSize: 26,
+    fontWeight: "900",
+    color: tema.colores.textoPrincipal,
     letterSpacing: 0.5,
     marginTop: 2,
   },
   badgeEstadoMedidor: {
-    backgroundColor: tema.colores.informacionFondo,
-    borderColor: tema.colores.informacionBorde,
-    borderWidth: 1,
+    backgroundColor: tema.colores.infoFondo,
+    borderColor: tema.colores.infoBorde,
+    borderWidth: 1.5,
     paddingHorizontal: 10,
     paddingVertical: 5,
-    borderRadius: 8,
+    borderRadius: tema.radioPill,
   },
   textoBadgeEstadoMedidor: {
-    color: tema.colores.primario,
+    color: tema.colores.textoPrincipal,
     fontSize: 12,
     fontWeight: "800",
     letterSpacing: 0.5,
@@ -651,28 +691,30 @@ const estilos = StyleSheet.create({
   tituloSeccion: {
     fontSize: 18,
     fontWeight: "800",
-    color: tema.colores.texto,
+    color: tema.colores.textoPrincipal,
     letterSpacing: 0.2,
   },
   contadorHistorial: {
-    backgroundColor: "#E2E8F0",
+    backgroundColor: tema.colores.fondoSuave,
+    borderColor: tema.colores.primario,
+    borderWidth: 1,
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 999,
+    borderRadius: tema.radioPill,
   },
   textoContadorHistorial: {
     fontSize: 12,
-    fontWeight: "700",
-    color: tema.colores.textoSuave,
+    fontWeight: "800",
+    color: tema.colores.textoPrincipal,
   },
   listaLecturas: {
     gap: 10,
   },
   tarjetaLectura: {
-    backgroundColor: tema.colores.superficie, // #FFFFFF
+    backgroundColor: tema.colores.superficie,
     borderRadius: tema.radio,
-    borderWidth: 1,
-    borderColor: tema.colores.borde,
+    borderWidth: 1.5,
+    borderColor: tema.colores.neutro,
     padding: 16,
     gap: 12,
   },
@@ -685,20 +727,20 @@ const estilos = StyleSheet.create({
   itemCodigo: {
     fontSize: 17,
     fontWeight: "800",
-    color: tema.colores.texto,
+    color: tema.colores.textoPrincipal,
     letterSpacing: 0.3,
   },
   itemPeriodo: {
     fontSize: 13,
-    color: tema.colores.textoSuave,
+    color: tema.colores.textoSecundario,
     marginTop: 2,
-    fontWeight: "500",
+    fontWeight: "600",
   },
   chipEstado: {
     paddingHorizontal: 10,
     paddingVertical: 4,
-    borderRadius: 999,
-    borderWidth: 1,
+    borderRadius: tema.radioPill,
+    borderWidth: 1.5,
   },
   textoChip: {
     fontSize: 12,
@@ -710,7 +752,7 @@ const estilos = StyleSheet.create({
     gap: 20,
     paddingTop: 10,
     borderTopWidth: 1,
-    borderTopColor: "#F1F5F9",
+    borderTopColor: tema.colores.fondoSuave,
   },
   columnaDato: {
     gap: 2,
@@ -718,27 +760,27 @@ const estilos = StyleSheet.create({
   etiquetaDato: {
     fontSize: 11,
     fontWeight: "700",
-    color: tema.colores.textoSuave,
+    color: tema.colores.textoSecundario,
     textTransform: "uppercase",
-    letterSpacing: 0.4,
+    letterSpacing: 0.5,
   },
   valorDato: {
     fontSize: 15,
-    fontWeight: "700",
-    color: tema.colores.texto,
+    fontWeight: "800",
+    color: tema.colores.textoPrincipal,
   },
   badgeAnomalo: {
     marginLeft: "auto",
-    backgroundColor: tema.colores.avisoFondo,
-    borderColor: tema.colores.avisoBorde,
-    borderWidth: 1,
+    backgroundColor: tema.colores.criticoFondo,
+    borderColor: tema.colores.criticoBorde,
+    borderWidth: 1.5,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: 6,
+    borderRadius: tema.radioPill,
   },
   textoBadgeAnomalo: {
     fontSize: 11,
     fontWeight: "800",
-    color: tema.colores.aviso,
+    color: tema.colores.criticoTexto,
   },
 });

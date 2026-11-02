@@ -2,39 +2,39 @@
 import { Redirect } from "expo-router";
 import { useEffect, useState } from "react";
 import {
-    AppState,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Switch,
-    Text,
-    TextInput,
-    View,
+  AppState,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Switch,
+  Text,
+  TextInput,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
-    Aviso,
-    BarraSuperior,
-    Boton,
-    Tarjeta,
+  Aviso,
+  BarraSuperior,
+  Boton,
+  Tarjeta,
 } from "../../../componentes/Piezas";
 import { tema } from "../../../constants/tema";
 import { useApp } from "../../../contexto/AppContext";
 import { irA, volver } from "../../../rutas";
 import { FACTOR_ANOMALIA, calcular } from "../../../servicios/calculos";
 import {
-    Borrador,
-    ErroresRegistro,
-    EstadoMedidor,
-    validarRegistro,
+  Borrador,
+  ErroresRegistro,
+  EstadoMedidor,
+  validarRegistro,
 } from "../../../validacion/validacion";
 
-const OPCIONES: { valor: EstadoMedidor; texto: string }[] = [
-  { valor: "normal", texto: "Normal" },
-  { valor: "inaccesible", texto: "Inaccesible" },
-  { valor: "danado", texto: "Dañado" },
+const OPCIONES: { valor: EstadoMedidor; texto: string; glifo: string }[] = [
+  { valor: "normal", texto: "Normal", glifo: "•" },
+  { valor: "inaccesible", texto: "Inaccesible", glifo: "⊘" },
+  { valor: "danado", texto: "Dañado", glifo: "▲" },
 ];
 
 export default function PasoEstado() {
@@ -115,13 +115,11 @@ function Formulario({ borrador }: { borrador: Borrador }) {
           {borrador.medidor ? (
             <Tarjeta>
               <Text style={estilos.subtituloSeccion}>
-                Datos históricos de consumo
+                DATOS HISTÓRICOS DE CONSUMO
               </Text>
               <View style={estilos.filaHistorica}>
                 <View style={estilos.cajaDatoHistorico}>
-                  <Text style={estilos.etiquetaHistorica}>
-                    Lectura anterior
-                  </Text>
+                  <Text style={estilos.etiquetaHistorica}>Lectura anterior</Text>
                   <Text style={estilos.valorHistorico}>
                     {borrador.medidor.ultimaLectura}{" "}
                     <Text style={estilos.unidad}>m³</Text>
@@ -129,9 +127,7 @@ function Formulario({ borrador }: { borrador: Borrador }) {
                 </View>
                 <View style={estilos.divisorVertical} />
                 <View style={estilos.cajaDatoHistorico}>
-                  <Text style={estilos.etiquetaHistorica}>
-                    Promedio mensual
-                  </Text>
+                  <Text style={estilos.etiquetaHistorica}>Promedio mensual</Text>
                   <Text style={estilos.valorHistorico}>
                     {borrador.medidor.consumoPromedio}{" "}
                     <Text style={estilos.unidad}>m³</Text>
@@ -168,6 +164,14 @@ function Formulario({ borrador }: { borrador: Borrador }) {
                   >
                     <Text
                       style={[
+                        estilos.glifoOpcion,
+                        activa ? estilos.textoBlanco : estilos.textoNeutro,
+                      ]}
+                    >
+                      {o.glifo}
+                    </Text>
+                    <Text
+                      style={[
                         estilos.textoOpcion,
                         activa
                           ? estilos.textoOpcionActiva
@@ -184,7 +188,7 @@ function Formulario({ borrador }: { borrador: Borrador }) {
             {campos.estadoMedidor === "inaccesible" && (
               <View style={estilos.bloqueCampo}>
                 <Text style={estilos.etiqueta}>
-                  Motivo de inaccesibilidad (obligatorio)
+                  MOTIVO DE INACCESIBILIDAD (OBLIGATORIO)
                 </Text>
                 <TextInput
                   style={[
@@ -195,11 +199,11 @@ function Formulario({ borrador }: { borrador: Borrador }) {
                   value={campos.motivo}
                   onChangeText={(motivo) => cambiar({ motivo })}
                   placeholder="Ej.: caja cubierta por escombros o reja cerrada"
-                  placeholderTextColor={tema.colores.textoSuave}
+                  placeholderTextColor={tema.colores.neutro}
                   multiline
                 />
                 {errores.motivo && (
-                  <Text style={estilos.textoError}>{errores.motivo}</Text>
+                  <Text style={estilos.textoError}>✕ {errores.motivo}</Text>
                 )}
               </View>
             )}
@@ -207,7 +211,7 @@ function Formulario({ borrador }: { borrador: Borrador }) {
             {campos.estadoMedidor === "danado" && (
               <View style={estilos.bloqueCampo}>
                 <Text style={estilos.etiqueta}>
-                  Descripción del daño (obligatoria)
+                  DESCRIPCIÓN DEL DAÑO (OBLIGATORIA)
                 </Text>
                 <TextInput
                   style={[
@@ -220,12 +224,12 @@ function Formulario({ borrador }: { borrador: Borrador }) {
                     cambiar({ descripcionDanio })
                   }
                   placeholder="Ej.: visor empañado o quebrado, mecanismo trabado"
-                  placeholderTextColor={tema.colores.textoSuave}
+                  placeholderTextColor={tema.colores.neutro}
                   multiline
                 />
                 {errores.descripcionDanio && (
                   <Text style={estilos.textoError}>
-                    {errores.descripcionDanio}
+                    ✕ {errores.descripcionDanio}
                   </Text>
                 )}
               </View>
@@ -236,8 +240,8 @@ function Formulario({ borrador }: { borrador: Borrador }) {
                 <View style={estilos.cabeceraCampo}>
                   <Text style={estilos.etiqueta}>
                     {campos.estadoMedidor === "danado"
-                      ? "Lectura (opcional)"
-                      : "Lectura actual"}
+                      ? "LECTURA (OPCIONAL)"
+                      : "LECTURA ACTUAL"}
                   </Text>
                   <Text style={estilos.unidadMedida}>Metros cúbicos (m³)</Text>
                 </View>
@@ -250,11 +254,11 @@ function Formulario({ borrador }: { borrador: Borrador }) {
                   value={campos.lectura}
                   onChangeText={(lectura) => cambiar({ lectura })}
                   placeholder="0000"
-                  placeholderTextColor={tema.colores.textoSuave}
+                  placeholderTextColor={tema.colores.neutro}
                   keyboardType="decimal-pad"
                 />
                 {errores.lectura && (
-                  <Text style={estilos.textoError}>{errores.lectura}</Text>
+                  <Text style={estilos.textoError}>✕ {errores.lectura}</Text>
                 )}
               </View>
             )}
@@ -264,13 +268,11 @@ function Formulario({ borrador }: { borrador: Borrador }) {
           {calculo.consumo !== null && (
             <Tarjeta>
               <View style={estilos.tarjetaConsumo}>
-                <View>
-                  <Text style={estilos.etiquetaConsumo}>Consumo calculado</Text>
-                  <Text style={estilos.valorConsumo}>
-                    {calculo.consumo}{" "}
-                    <Text style={estilos.unidadConsumo}>m³</Text>
-                  </Text>
-                </View>
+                <Text style={estilos.etiquetaConsumo}>CONSUMO CALCULADO</Text>
+                <Text style={estilos.valorConsumo}>
+                  {calculo.consumo}{" "}
+                  <Text style={estilos.unidadConsumo}>m³</Text>
+                </Text>
               </View>
 
               {calculo.anomalo && calculo.promedio !== null && (
@@ -286,7 +288,7 @@ function Formulario({ borrador }: { borrador: Borrador }) {
                         cambiar({ confirmoRevision })
                       }
                       trackColor={{
-                        false: "#D0D7DE",
+                        false: tema.colores.neutro,
                         true: tema.colores.primario,
                       }}
                       thumbColor="#FFFFFF"
@@ -297,7 +299,7 @@ function Formulario({ borrador }: { borrador: Borrador }) {
                   </View>
                   {errores.confirmacion && (
                     <Text style={estilos.textoError}>
-                      {errores.confirmacion}
+                      ✕ {errores.confirmacion}
                     </Text>
                   )}
                 </View>
@@ -320,14 +322,14 @@ const estilos = StyleSheet.create({
   contenido: {
     padding: 18,
     gap: 16,
-    paddingBottom: 24,
+    paddingBottom: 40,
   },
   subtituloSeccion: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: tema.colores.textoSuave,
+    fontSize: 11,
+    fontWeight: "800",
+    color: tema.colores.textoSecundario,
     textTransform: "uppercase",
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
   },
   filaHistorica: {
     flexDirection: "row",
@@ -341,34 +343,34 @@ const estilos = StyleSheet.create({
     gap: 2,
   },
   divisorVertical: {
-    width: 1,
+    width: 1.5,
     height: 38,
-    backgroundColor: tema.colores.borde,
+    backgroundColor: tema.colores.fondoSuave,
   },
   etiquetaHistorica: {
     fontSize: 12,
-    fontWeight: "600",
-    color: tema.colores.textoSuave,
+    fontWeight: "700",
+    color: tema.colores.textoSecundario,
   },
   valorHistorico: {
-    fontSize: 20,
-    fontWeight: "800",
-    color: tema.colores.texto,
+    fontSize: 22,
+    fontWeight: "900",
+    color: tema.colores.textoPrincipal,
   },
   unidad: {
     fontSize: 14,
-    fontWeight: "600",
-    color: tema.colores.textoSuave,
+    fontWeight: "700",
+    color: tema.colores.textoSecundario,
   },
   titulo: {
     fontSize: 18,
     fontWeight: "800",
-    color: tema.colores.texto,
+    color: tema.colores.textoPrincipal,
     letterSpacing: 0.2,
   },
   descripcionCampo: {
     fontSize: 14,
-    color: tema.colores.textoSuave,
+    color: tema.colores.textoSecundario,
     lineHeight: 20,
   },
   opciones: {
@@ -379,32 +381,43 @@ const estilos = StyleSheet.create({
   opcion: {
     flex: 1,
     borderWidth: 1.5,
-    borderRadius: tema.radio,
+    borderRadius: tema.radioBoton,
     paddingVertical: 14,
     alignItems: "center",
     justifyContent: "center",
+    gap: 2,
   },
   opcionActiva: {
-    backgroundColor: tema.colores.primario, // #00529B
+    backgroundColor: tema.colores.primario,
     borderColor: tema.colores.primario,
   },
   opcionInactiva: {
-    backgroundColor: tema.colores.superficie, // #FFFFFF
-    borderColor: tema.colores.borde,
+    backgroundColor: tema.colores.superficie,
+    borderColor: tema.colores.neutro,
+  },
+  glifoOpcion: {
+    fontSize: 14,
+    fontWeight: "900",
+  },
+  textoBlanco: {
+    color: "#FFFFFF",
+  },
+  textoNeutro: {
+    color: tema.colores.textoSecundario,
   },
   textoOpcion: {
     fontSize: 14,
-    fontWeight: "700",
+    fontWeight: "800",
     letterSpacing: 0.2,
   },
   textoOpcionActiva: {
     color: "#FFFFFF",
   },
   textoOpcionInactiva: {
-    color: tema.colores.texto,
+    color: tema.colores.textoPrincipal,
   },
   bloqueCampo: {
-    gap: 8,
+    gap: 6,
     marginTop: 4,
   },
   cabeceraCampo: {
@@ -413,28 +426,30 @@ const estilos = StyleSheet.create({
     alignItems: "baseline",
   },
   etiqueta: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: tema.colores.texto,
+    fontSize: 11,
+    fontWeight: "800",
+    color: tema.colores.textoSecundario,
+    letterSpacing: 0.8,
   },
   unidadMedida: {
     fontSize: 12,
-    fontWeight: "600",
-    color: tema.colores.textoSuave,
+    fontWeight: "700",
+    color: tema.colores.textoSecundario,
   },
   campo: {
     borderWidth: 1.5,
-    borderColor: tema.colores.borde,
-    borderRadius: tema.radio,
+    borderColor: tema.colores.neutro,
+    borderRadius: tema.radioBoton,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 18,
-    color: tema.colores.texto,
-    backgroundColor: tema.colores.campoFondo,
+    fontWeight: "700",
+    color: tema.colores.textoPrincipal,
+    backgroundColor: tema.colores.fondo,
   },
   campoLectura: {
     fontSize: 24,
-    fontWeight: "800",
+    fontWeight: "900",
     letterSpacing: 1.5,
   },
   multilinea: {
@@ -442,41 +457,42 @@ const estilos = StyleSheet.create({
     textAlignVertical: "top",
     fontSize: 16,
     lineHeight: 22,
+    fontWeight: "600",
   },
   campoError: {
-    borderColor: tema.colores.error,
-    backgroundColor: tema.colores.errorFondo,
+    borderColor: tema.colores.critico,
+    backgroundColor: tema.colores.criticoFondo,
   },
   textoError: {
-    color: tema.colores.error,
+    color: tema.colores.criticoTexto,
     fontSize: 13,
     fontWeight: "700",
   },
   tarjetaConsumo: {
     paddingVertical: 4,
+    gap: 2,
   },
   etiquetaConsumo: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: tema.colores.textoSuave,
+    fontSize: 11,
+    fontWeight: "800",
+    color: tema.colores.textoSecundario,
     textTransform: "uppercase",
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
   },
   valorConsumo: {
     fontSize: 28,
-    fontWeight: "800",
-    color: tema.colores.primario, // #00529B
-    marginTop: 2,
+    fontWeight: "900",
+    color: tema.colores.textoPrincipal,
   },
   unidadConsumo: {
     fontSize: 18,
-    fontWeight: "600",
-    color: tema.colores.textoSuave,
+    fontWeight: "700",
+    color: tema.colores.textoSecundario,
   },
   bloqueAnomalia: {
     gap: 12,
-    borderTopWidth: 1,
-    borderTopColor: "#F1F5F9",
+    borderTopWidth: 1.5,
+    borderTopColor: tema.colores.fondoSuave,
     paddingTop: 12,
   },
   confirmacion: {
@@ -489,7 +505,7 @@ const estilos = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontWeight: "700",
-    color: tema.colores.texto,
+    color: tema.colores.textoPrincipal,
     lineHeight: 20,
   },
 });

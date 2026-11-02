@@ -33,7 +33,7 @@ export function IndicadorEstado() {
               estaConectado ? estilos.textoOnline : estilos.textoOffline,
             ]}
           >
-            {estaConectado ? 'En línea' : 'Modo sin conexión'}
+            {estaConectado ? 'En línea' : 'Sin señal'}
           </Text>
         </View>
 
@@ -57,9 +57,7 @@ export function IndicadorEstado() {
                 : estilos.textoBadgeOffline,
             ]}
           >
-            {pendientes === 1
-              ? '1 por enviar'
-              : `${pendientes} por enviar`}
+            {pendientes === 1 ? '↑ 1 por enviar' : `↑ ${pendientes} por enviar`}
           </Text>
         </View>
       </View>
@@ -68,8 +66,8 @@ export function IndicadorEstado() {
         <View style={estilos.avisoOffline}>
           <Text style={estilos.textoAvisoOffline}>
             {pendientes > 0
-              ? `${pendientes} lectura${pendientes === 1 ? '' : 's'} pendiente${pendientes === 1 ? '' : 's'} de sincronizar con el servidor`
-              : 'Las lecturas se guardan localmente hasta recuperar la señal.'}
+              ? `${pendientes} lectura${pendientes === 1 ? '' : 's'} guardada${pendientes === 1 ? '' : 's'} en el teléfono. Se enviará${pendientes === 1 ? '' : 'n'} al recuperar la señal.`
+              : 'Modo sin conexión activo. Las lecturas se guardan en el teléfono.'}
           </Text>
         </View>
       )}
@@ -79,17 +77,17 @@ export function IndicadorEstado() {
 
 const estilos = StyleSheet.create({
   barra: {
-    borderTopWidth: 1,
+    borderTopWidth: 1.5,
     paddingHorizontal: 20,
     paddingTop: 10,
   },
   barraOnline: {
     backgroundColor: tema.colores.superficie,
-    borderTopColor: tema.colores.borde,
+    borderTopColor: tema.colores.neutro,
   },
   barraOffline: {
-    backgroundColor: tema.colores.avisoFondo, // #FFF3CD
-    borderTopColor: tema.colores.avisoBorde, // #FFEEBA
+    backgroundColor: tema.colores.calidoFondo,
+    borderTopColor: tema.colores.calidoBorde,
   },
   fila: {
     flexDirection: 'row',
@@ -107,63 +105,63 @@ const estilos = StyleSheet.create({
     borderRadius: 5,
   },
   puntoOnline: {
-    backgroundColor: tema.colores.exito, // #28A745
+    backgroundColor: tema.colores.enviada,
   },
   puntoOffline: {
-    backgroundColor: '#D39E00',
+    backgroundColor: tema.colores.critico,
   },
   textoConexion: {
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '800',
     letterSpacing: 0.2,
   },
   textoOnline: {
-    color: tema.colores.texto,
+    color: tema.colores.textoPrincipal,
   },
   textoOffline: {
-    color: tema.colores.aviso, // #856404
+    color: tema.colores.calidoTexto,
   },
   badge: {
     paddingHorizontal: 12,
     paddingVertical: 5,
-    borderRadius: 999,
+    borderRadius: tema.radioPill,
+    borderWidth: 1.5,
   },
   badgeOnlinePendiente: {
-    backgroundColor: tema.colores.informacionFondo,
-    borderWidth: 1,
-    borderColor: tema.colores.informacionBorde,
+    backgroundColor: tema.colores.fondoSuave,
+    borderColor: tema.colores.primario,
   },
   badgeOnlineLimpio: {
-    backgroundColor: '#F1F5F9',
+    backgroundColor: tema.colores.fondo,
+    borderColor: tema.colores.neutro,
   },
   badgeOffline: {
-    backgroundColor: '#FFEBAA',
-    borderWidth: 1,
-    borderColor: '#E0A800',
+    backgroundColor: '#EFE7D2',
+    borderColor: tema.colores.calidoBorde,
   },
   textoBadge: {
     fontSize: 13,
     fontWeight: '800',
   },
   textoBadgeOnlinePendiente: {
-    color: tema.colores.primario,
+    color: tema.colores.textoPrincipal,
   },
   textoBadgeOnlineLimpio: {
-    color: tema.colores.textoSuave,
+    color: tema.colores.textoSecundario,
   },
   textoBadgeOffline: {
-    color: tema.colores.aviso,
+    color: tema.colores.calidoTexto,
   },
   avisoOffline: {
     marginTop: 6,
     paddingTop: 6,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(133, 100, 4, 0.15)',
+    borderTopColor: tema.colores.calidoBorde,
   },
   textoAvisoOffline: {
     fontSize: 12,
     fontWeight: '600',
-    color: tema.colores.aviso,
+    color: tema.colores.calidoTexto,
     lineHeight: 16,
   },
 });

@@ -4,11 +4,11 @@ import { useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
-    Aviso,
-    BarraSuperior,
-    Boton,
-    Fila,
-    Tarjeta,
+  Aviso,
+  BarraSuperior,
+  Boton,
+  Fila,
+  Tarjeta,
 } from "../../../componentes/Piezas";
 import { URL_LECTURAS } from "../../../config/api";
 import { tema } from "../../../constants/tema";
@@ -22,9 +22,9 @@ import { guardarLectura, mesActual } from "../../../servicios/lecturas";
 import { Borrador, Lectura } from "../../../validacion/validacion";
 
 const NOMBRE_ESTADO = {
-  normal: "Normal",
-  inaccesible: "Inaccesible",
-  danado: "Dañado",
+  normal: "• Normal",
+  inaccesible: "⊘ Inaccesible",
+  danado: "▲ Dañado",
 } as const;
 
 export default function PasoResumen() {
@@ -128,9 +128,7 @@ function Resumen({
       return;
     }
     if (resultado.tipo === "error") {
-      setError(
-        "No se pudo guardar la lectura en el teléfono. Intenta de nuevo.",
-      );
+      setError("No se pudo guardar la lectura en el teléfono. Intenta de nuevo.");
       setGuardando(false);
       return;
     }
@@ -158,8 +156,7 @@ function Resumen({
           <View style={estilos.cabeceraResumen}>
             <Text style={estilos.tituloTarjeta}>Confirmación de datos</Text>
             <Text style={estilos.subtituloTarjeta}>
-              Verifique los datos registrados antes de guardar en el
-              dispositivo:
+              Verifique los datos registrados antes de guardar en el dispositivo:
             </Text>
           </View>
 
@@ -172,10 +169,7 @@ function Resumen({
             <Fila etiqueta="Lectura actual" valor={`${calculo.lectura} m³`} />
           )}
           {calculo.anterior !== null && (
-            <Fila
-              etiqueta="Lectura anterior"
-              valor={`${calculo.anterior} m³`}
-            />
+            <Fila etiqueta="Lectura anterior" valor={`${calculo.anterior} m³`} />
           )}
           {calculo.consumo !== null && (
             <Fila etiqueta="Consumo neto" valor={`${calculo.consumo} m³`} />
@@ -235,7 +229,7 @@ const estilos = StyleSheet.create({
   contenido: {
     padding: 18,
     gap: 16,
-    paddingBottom: 24,
+    paddingBottom: 40,
   },
   cabeceraResumen: {
     gap: 4,
@@ -244,12 +238,12 @@ const estilos = StyleSheet.create({
   tituloTarjeta: {
     fontSize: 18,
     fontWeight: "800",
-    color: tema.colores.texto,
+    color: tema.colores.textoPrincipal,
     letterSpacing: 0.2,
   },
   subtituloTarjeta: {
     fontSize: 14,
-    color: tema.colores.textoSuave,
+    color: tema.colores.textoSecundario,
     lineHeight: 20,
   },
   acciones: {
