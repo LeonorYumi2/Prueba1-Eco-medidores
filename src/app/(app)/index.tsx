@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaViewEstilizada } from "../../componentes/SafeAreaViewEstilizada";
 import { ImagenEstilizada } from "../../componentes/ImagenEstilizada";
+import { ConfirmacionCerrarSesion } from "../../componentes/ConfirmacionCerrarSesion";
 import { Aviso, Boton, Fila, Tarjeta } from "../../componentes/Piezas";
 import { useApp } from "../../contexto/AppContext";
 import { useSesion } from "../../contexto/sesion";
@@ -87,6 +88,7 @@ export default function Inicio() {
   const [codigoConsultado, setCodigoConsultado] = useState<string | null>(null);
   const [existente, setExistente] = useState<Lectura | null>(null);
   const [lecturas, setLecturas] = useState<Lectura[]>([]);
+  const [mostrarConfirmacionSalida, setMostrarConfirmacionSalida] = useState(false);
 
   // useConsultaMedidor sustituye la llamada directa a consultarMedidor y los estados resultado y consultando (ADR-003).
   const {
@@ -203,6 +205,15 @@ export default function Inicio() {
     );
   }
 
+  function confirmarCierreSesion() {
+    setMostrarConfirmacionSalida(true);
+  }
+
+  function salir() {
+    setMostrarConfirmacionSalida(false);
+    void cerrarSesion();
+  }
+
   // Acciones de registro según el resultado y la lectura que ya exista este mes (R10).
   function accionesRegistro() {
     if (!resultado || resultado.tipo === "no-existe") return null;
@@ -285,7 +296,7 @@ export default function Inicio() {
               <Text className="text-[13px] font-extrabold text-white">Perfil</Text>
             </Pressable>
             <Pressable
-              onPress={() => void cerrarSesion()}
+              onPress={confirmarCierreSesion}
               className="rounded-boton border-[1.5px] border-white/35 bg-white/15 px-3 py-2"
               style={({ pressed }) => pressed ? { opacity: 0.8 } : undefined}
               hitSlop={8}
@@ -300,7 +311,7 @@ export default function Inicio() {
 
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView
           contentContainerClassName="gap-4 p-[18px] pb-9"
@@ -496,7 +507,7 @@ export default function Inicio() {
 
                         {l.anomalo && (
                           <View className="ml-auto rounded-full border-[1.5px] border-error-borde bg-error-fondo px-2 py-1">
-                            <Text className="text-[11px] font-extrabold text-error-texto">⚠ Anómalo</Text>
+                            <Text className="text-[11px] font-extrabold text-error-texto">Anómalo</Text>
                           </View>
                         )}
                       </View>
@@ -508,6 +519,11 @@ export default function Inicio() {
           )}
         </ScrollView>
       </KeyboardAvoidingView>
+      <ConfirmacionCerrarSesion
+        visible={mostrarConfirmacionSalida}
+        onCancelar={() => setMostrarConfirmacionSalida(false)}
+        onConfirmar={salir}
+      />
     </SafeAreaViewEstilizada>
   );
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { AppState } from 'react-native';
+import { ConfirmacionCerrarSesion } from '../componentes/ConfirmacionCerrarSesion';
 import { Aviso, Boton, PantallaFormulario } from '../componentes/Piezas';
 import { useSesion } from '../contexto/sesion';
 import { mensajeDeError } from '../validacion/errores-firebase';
@@ -15,6 +16,7 @@ export default function VerificarCorreo() {
   const [comprobando, setComprobando] = useState(false);
   const [reenviando, setReenviando] = useState(false);
   const [aviso, setAviso] = useState<{ tipo: 'error' | 'info'; texto: string } | null>(null);
+  const [mostrarConfirmacionSalida, setMostrarConfirmacionSalida] = useState(false);
 
   // Al volver a la app desde el correo se comprueba solo.
   useEffect(() => {
@@ -61,6 +63,15 @@ export default function VerificarCorreo() {
     }
   }
 
+  function confirmarCierreSesion() {
+    setMostrarConfirmacionSalida(true);
+  }
+
+  function salir() {
+    setMostrarConfirmacionSalida(false);
+    void cerrarSesion();
+  }
+
   return (
     <PantallaFormulario titulo="Verifica tu correo" subtitulo={usuario?.email ?? ''}>
       {errorEnvioVerificacion ? (
@@ -74,7 +85,12 @@ export default function VerificarCorreo() {
       {aviso ? <Aviso tipo={aviso.tipo} texto={aviso.texto} /> : null}
       <Boton texto="Ya verifiqué mi correo" onPress={comprobar} cargando={comprobando} />
       <Boton texto="Reenviar correo" variante="secundario" onPress={reenviar} cargando={reenviando} />
-      <Boton texto="Usar otra cuenta" variante="secundario" onPress={() => void cerrarSesion()} />
+      <Boton texto="Usar otra cuenta" variante="secundario" onPress={confirmarCierreSesion} />
+      <ConfirmacionCerrarSesion
+        visible={mostrarConfirmacionSalida}
+        onCancelar={() => setMostrarConfirmacionSalida(false)}
+        onConfirmar={salir}
+      />
     </PantallaFormulario>
   );
 }

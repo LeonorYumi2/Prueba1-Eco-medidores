@@ -103,7 +103,7 @@ function Formulario({ borrador }: { borrador: Borrador }) {
       />
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView
           contentContainerClassName="gap-4 p-[18px] pb-10"
@@ -182,7 +182,7 @@ function Formulario({ borrador }: { borrador: Borrador }) {
                   multiline
                 />
                 {errores.motivo && (
-                  <Text className="text-[13px] font-bold text-error-texto">✕ {errores.motivo}</Text>
+                  <Text className="text-[13px] font-bold text-error-texto">{errores.motivo}</Text>
                 )}
               </View>
             )}
@@ -203,7 +203,7 @@ function Formulario({ borrador }: { borrador: Borrador }) {
                 />
                 {errores.descripcionDanio && (
                   <Text className="text-[13px] font-bold text-error-texto">
-                    ✕ {errores.descripcionDanio}
+                    {errores.descripcionDanio}
                   </Text>
                 )}
               </View>
@@ -227,7 +227,7 @@ function Formulario({ borrador }: { borrador: Borrador }) {
                   keyboardType="decimal-pad"
                 />
                 {errores.lectura && (
-                  <Text className="text-[13px] font-bold text-error-texto">✕ {errores.lectura}</Text>
+                  <Text className="text-[13px] font-bold text-error-texto">{errores.lectura}</Text>
                 )}
               </View>
             )}
@@ -268,7 +268,7 @@ function Formulario({ borrador }: { borrador: Borrador }) {
                   </View>
                   {errores.confirmacion && (
                     <Text className="text-[13px] font-bold text-error-texto">
-                      ✕ {errores.confirmacion}
+                      {errores.confirmacion}
                     </Text>
                   )}
                 </View>

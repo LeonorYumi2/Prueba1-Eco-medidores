@@ -3,6 +3,7 @@ import { ReactNode, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -25,30 +26,26 @@ export function Aviso({ texto, tipo }: { texto: string; tipo: 'info' | 'aviso' |
   const configuraciones = {
     info: {
       clases: 'bg-info-fondo border-info-borde text-info-texto',
-      icono: 'ℹ',
+      acento: 'bg-info-texto',
+      texto: 'text-info-texto',
     },
     aviso: {
       clases: 'bg-aviso-fondo border-aviso-borde text-aviso-texto',
-      icono: '▲',
+      acento: 'bg-aviso-texto',
+      texto: 'text-aviso-texto',
     },
     error: {
       clases: 'bg-error-fondo border-error-borde text-error-texto',
-      icono: '✕',
+      acento: 'bg-error-texto',
+      texto: 'text-error-texto',
     },
   };
   const configuracion = configuraciones[tipo];
-  const claseIcono = tipo === 'info'
-    ? 'text-info-texto'
-    : tipo === 'aviso'
-      ? 'text-aviso-texto'
-      : 'text-error-texto';
 
   return (
-    <AvisoAnimado className={`flex-row items-start gap-2.5 rounded-tarjeta border-[1.5px] px-4 py-3.5 ${configuracion.clases}`}>
-      <Text className={`mt-0.5 text-sm font-extrabold ${claseIcono}`}>
-        {configuracion.icono}
-      </Text>
-      <Text className={`flex-1 text-sm font-semibold leading-5 ${claseIcono}`}>{texto}</Text>
+    <AvisoAnimado className={`flex-row items-start gap-3 rounded-tarjeta border-[1.5px] px-4 py-3.5 ${configuracion.clases}`}>
+      <View className={`mt-1 h-5 w-1 shrink-0 rounded-full ${configuracion.acento}`} />
+      <Text className={`flex-1 text-sm font-semibold leading-5 ${configuracion.texto}`}>{texto}</Text>
     </AvisoAnimado>
   );
 }
@@ -183,7 +180,7 @@ export function CampoTexto({ etiqueta, error, esClave = false, style, ...props }
           </Pressable>
         )}
       </View>
-      {error ? <Text className="text-xs font-bold text-critico">✕ {error}</Text> : null}
+      {error ? <Text className="text-xs font-bold text-critico">{error}</Text> : null}
     </View>
   );
 }
@@ -230,9 +227,12 @@ export function PantallaFormulario({
   return (
     <SafeAreaViewEstilizada className="flex-1 bg-lienzo" edges={['top', 'left', 'right']}>
       <BarraSuperior titulo={titulo} subtitulo={subtitulo} onVolver={onVolver} />
-      <KeyboardAvoidingView className="flex-1" behavior="padding">
+      <KeyboardAvoidingView
+        className="flex-1"
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
         <ScrollView
-          contentContainerClassName="gap-4 p-5 pb-10"
+          contentContainerClassName="flex-grow gap-4 p-5 pb-10"
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}>
           {children}

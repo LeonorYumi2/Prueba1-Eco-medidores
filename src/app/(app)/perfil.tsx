@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ConfirmacionCerrarSesion } from '../../componentes/ConfirmacionCerrarSesion';
 import { Aviso, Boton, CampoTexto, Fila, PantallaFormulario, Tarjeta } from '../../componentes/Piezas';
 import { useSesion } from '../../contexto/sesion';
 import { irA, volver } from '../../rutas';
@@ -17,6 +18,7 @@ export default function Perfil() {
   const [aviso, setAviso] = useState<{ tipo: 'error' | 'info'; texto: string } | null>(null);
   const [guardando, setGuardando] = useState(false);
   const [saliendo, setSaliendo] = useState(false);
+  const [mostrarConfirmacionSalida, setMostrarConfirmacionSalida] = useState(false);
 
   async function guardar() {
     const error = validarNombre(nuevoNombre);
@@ -39,6 +41,15 @@ export default function Perfil() {
     await cerrarSesion(); // Stack.Protected lleva al login
   }
 
+  function confirmarSalir() {
+    setMostrarConfirmacionSalida(true);
+  }
+
+  function confirmarCerrarSesion() {
+    setMostrarConfirmacionSalida(false);
+    void salir();
+  }
+
   return (
     <PantallaFormulario titulo="Mi perfil" subtitulo={usuario?.email ?? ''} onVolver={volver}>
       <Tarjeta>
@@ -56,7 +67,12 @@ export default function Perfil() {
       </Tarjeta>
 
       <Boton texto="Cambiar contraseña" variante="secundario" onPress={() => irA('/cambiar-clave')} />
-      <Boton texto="Cerrar sesión" variante="peligro" onPress={salir} cargando={saliendo} />
+      <Boton texto="Cerrar sesión" variante="peligro" onPress={confirmarSalir} cargando={saliendo} />
+      <ConfirmacionCerrarSesion
+        visible={mostrarConfirmacionSalida}
+        onCancelar={() => setMostrarConfirmacionSalida(false)}
+        onConfirmar={confirmarCerrarSesion}
+      />
     </PantallaFormulario>
   );
 }

@@ -88,7 +88,7 @@ export default function Login() {
     <SafeAreaViewEstilizada className="flex-1 bg-lienzo" edges={["top", "left", "right"]}>
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
         <ScrollView
           contentContainerClassName="flex-grow pb-10"
@@ -199,7 +199,6 @@ export default function Login() {
 
               {error && (
                 <AvisoAnimado className="flex-row items-center gap-2 rounded-boton border-[1.5px] border-error-borde bg-error-fondo p-3">
-                  <Text className="text-[13px] font-black text-error-texto">✕</Text>
                   <Text className="flex-1 text-[13px] font-bold leading-[18px] text-error-texto">{error}</Text>
                 </AvisoAnimado>
               )}
