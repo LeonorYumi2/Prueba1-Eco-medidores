@@ -1,4 +1,4 @@
-// Paso 1 del registro: estado del medidor y lectura (R5), con aviso de consumo anómalo (R6).
+﻿// Paso 1 del registro: estado del medidor y lectura (R5), con aviso de consumo anómalo (R6).
 import { Redirect } from "expo-router";
 import { useEffect, useState } from "react";
 import {

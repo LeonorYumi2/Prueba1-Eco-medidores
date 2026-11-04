@@ -53,14 +53,14 @@ function etiquetaEnvio(l: Lectura): {
 } {
   if (l.envio === "enviada") {
     return {
-      texto: "? Enviada",
+      texto: " Enviada",
       clasesChip: "bg-exito-fondo border-exito-borde",
       claseTexto: "text-exito-texto",
     };
   }
   if (l.envio === "conflicto") {
     return {
-      texto: "? En conflicto",
+      texto: " En conflicto",
       clasesChip: "bg-error-fondo border-error-borde",
       claseTexto: "text-error-texto",
     };
@@ -478,10 +478,10 @@ export default function Inicio() {
                           <Text className="text-[11px] font-bold uppercase tracking-[0.5px] text-tinta-suave">Condición</Text>
                           <Text className="text-[15px] font-extrabold text-tinta">
                             {l.estadoMedidor === "normal"
-                              ? "⬢ Normal"
+                              ? "Normal"
                               : l.estadoMedidor === "inaccesible"
-                                ? "? Inaccesible"
-                                : "? Da?ado"}
+                                ? "Inaccesible"
+                                : "Dañado"}
                           </Text>
                         </View>
 

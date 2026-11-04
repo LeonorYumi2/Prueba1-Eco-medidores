@@ -45,7 +45,7 @@ export default function Perfil() {
         <Fila etiqueta="Nombre" valor={nombre || 'Sin nombre'} />
         <Fila etiqueta="Correo" valor={usuario?.email ?? ''} />
         <Fila etiqueta="Cuenta creada" valor={formatearFecha(usuario?.metadata.creationTime)} />
-        <Fila etiqueta="?ltimo ingreso" valor={formatearFecha(usuario?.metadata.lastSignInTime)} />
+        <Fila etiqueta="Último ingreso" valor={formatearFecha(usuario?.metadata.lastSignInTime)} />
       </Tarjeta>
 
       <Tarjeta>
@@ -55,8 +55,8 @@ export default function Perfil() {
         <Boton texto="Guardar nombre" onPress={guardar} cargando={guardando} />
       </Tarjeta>
 
-      <Boton texto="Cambiar contrase?a" variante="secundario" onPress={() => irA('/cambiar-clave')} />
-      <Boton texto="Cerrar sesi?n" variante="peligro" onPress={salir} cargando={saliendo} />
+      <Boton texto="Cambiar contraseña" variante="secundario" onPress={() => irA('/cambiar-clave')} />
+      <Boton texto="Cerrar sesión" variante="peligro" onPress={salir} cargando={saliendo} />
     </PantallaFormulario>
   );
 }
