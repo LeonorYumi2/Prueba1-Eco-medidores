@@ -1,7 +1,6 @@
 // Indicador de conexión y lecturas pendientes en tiempo real (R9, ADR-007).
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { tema } from '../constants/tema';
 import { useApp } from '../contexto/AppContext';
 
 export function IndicadorEstado() {
@@ -13,49 +12,30 @@ export function IndicadorEstado() {
 
   return (
     <View
-      style={[
-        estilos.barra,
-        estaConectado ? estilos.barraOnline : estilos.barraOffline,
-        { paddingBottom: Math.max(insets.bottom, 10) },
-      ]}
+      className={`border-t-[1.5px] px-5 pt-2.5 ${estaConectado ? 'border-neutro bg-superficie' : 'border-aviso-borde bg-aviso-fondo'}`}
+      style={{ paddingBottom: Math.max(insets.bottom, 10) }}
     >
-      <View style={estilos.fila}>
-        <View style={estilos.indicador}>
-          <View
-            style={[
-              estilos.punto,
-              estaConectado ? estilos.puntoOnline : estilos.puntoOffline,
-            ]}
-          />
-          <Text
-            style={[
-              estilos.textoConexion,
-              estaConectado ? estilos.textoOnline : estilos.textoOffline,
-            ]}
-          >
+      <View className="flex-row items-center justify-between">
+        <View className="flex-row items-center gap-2">
+          <View className={`h-2.5 w-2.5 rounded-full ${estaConectado ? 'bg-exito' : 'bg-critico'}`} />
+          <Text className={`text-sm font-extrabold tracking-[0.2px] ${estaConectado ? 'text-tinta' : 'text-aviso-texto'}`}>
             {estaConectado ? 'En línea' : 'Sin señal'}
           </Text>
         </View>
 
         <View
-          style={[
-            estilos.badge,
-            estaConectado
-              ? pendientes > 0
-                ? estilos.badgeOnlinePendiente
-                : estilos.badgeOnlineLimpio
-              : estilos.badgeOffline,
-          ]}
+          className={`rounded-full border-[1.5px] px-3 py-1 ${estaConectado
+            ? pendientes > 0
+              ? 'border-primario bg-agua'
+              : 'border-neutro bg-lienzo'
+            : 'border-aviso-borde bg-aviso-fondo'}`}
         >
           <Text
-            style={[
-              estilos.textoBadge,
-              estaConectado
-                ? pendientes > 0
-                  ? estilos.textoBadgeOnlinePendiente
-                  : estilos.textoBadgeOnlineLimpio
-                : estilos.textoBadgeOffline,
-            ]}
+            className={`text-[13px] font-extrabold ${estaConectado
+              ? pendientes > 0
+                ? 'text-tinta'
+                : 'text-tinta-suave'
+              : 'text-aviso-texto'}`}
           >
             {pendientes === 1 ? '↑ 1 por enviar' : `↑ ${pendientes} por enviar`}
           </Text>
@@ -63,8 +43,8 @@ export function IndicadorEstado() {
       </View>
 
       {!estaConectado && (
-        <View style={estilos.avisoOffline}>
-          <Text style={estilos.textoAvisoOffline}>
+        <View className="mt-1.5 border-t border-aviso-borde pt-1.5">
+          <Text className="text-xs font-semibold leading-4 text-aviso-texto">
             {pendientes > 0
               ? `${pendientes} lectura${pendientes === 1 ? '' : 's'} guardada${pendientes === 1 ? '' : 's'} en el teléfono. Se enviará${pendientes === 1 ? '' : 'n'} al recuperar la señal.`
               : 'Modo sin conexión activo. Las lecturas se guardan en el teléfono.'}
@@ -74,94 +54,3 @@ export function IndicadorEstado() {
     </View>
   );
 }
-
-const estilos = StyleSheet.create({
-  barra: {
-    borderTopWidth: 1.5,
-    paddingHorizontal: 20,
-    paddingTop: 10,
-  },
-  barraOnline: {
-    backgroundColor: tema.colores.superficie,
-    borderTopColor: tema.colores.neutro,
-  },
-  barraOffline: {
-    backgroundColor: tema.colores.calidoFondo,
-    borderTopColor: tema.colores.calidoBorde,
-  },
-  fila: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  indicador: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  punto: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-  },
-  puntoOnline: {
-    backgroundColor: tema.colores.enviada,
-  },
-  puntoOffline: {
-    backgroundColor: tema.colores.critico,
-  },
-  textoConexion: {
-    fontSize: 14,
-    fontWeight: '800',
-    letterSpacing: 0.2,
-  },
-  textoOnline: {
-    color: tema.colores.textoPrincipal,
-  },
-  textoOffline: {
-    color: tema.colores.calidoTexto,
-  },
-  badge: {
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: tema.radioPill,
-    borderWidth: 1.5,
-  },
-  badgeOnlinePendiente: {
-    backgroundColor: tema.colores.fondoSuave,
-    borderColor: tema.colores.primario,
-  },
-  badgeOnlineLimpio: {
-    backgroundColor: tema.colores.fondo,
-    borderColor: tema.colores.neutro,
-  },
-  badgeOffline: {
-    backgroundColor: '#EFE7D2',
-    borderColor: tema.colores.calidoBorde,
-  },
-  textoBadge: {
-    fontSize: 13,
-    fontWeight: '800',
-  },
-  textoBadgeOnlinePendiente: {
-    color: tema.colores.textoPrincipal,
-  },
-  textoBadgeOnlineLimpio: {
-    color: tema.colores.textoSecundario,
-  },
-  textoBadgeOffline: {
-    color: tema.colores.calidoTexto,
-  },
-  avisoOffline: {
-    marginTop: 6,
-    paddingTop: 6,
-    borderTopWidth: 1,
-    borderTopColor: tema.colores.calidoBorde,
-  },
-  textoAvisoOffline: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: tema.colores.calidoTexto,
-    lineHeight: 16,
-  },
-});

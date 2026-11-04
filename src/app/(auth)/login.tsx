@@ -1,5 +1,4 @@
-// R1: inicio de sesión institucional con datos técnicos y marca EPMAPS.
-import { Image } from "expo-image";
+// R1 / ADR-009: inicio de sesión con Firebase Authentication y marca EPMAPS.
 import { useState } from "react";
 import {
   ActivityIndicator,
@@ -7,394 +6,242 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { tema } from "../../constants/tema";
-import { useApp } from "../../contexto/AppContext";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
+import { SafeAreaViewEstilizada } from "../../componentes/SafeAreaViewEstilizada";
+import { AvisoAnimado, Entrada, LogoZoom, useEscalaAlPresionar } from "../../componentes/Animados";
+import { ImagenEstilizada } from "../../componentes/ImagenEstilizada";
+import { useSesion } from "../../contexto/sesion";
+import { irA } from "../../rutas";
+import { mensajeDeError } from "../../validacion/errores-firebase";
+import { validarCorreo } from "../../validacion/validacion";
 
 export default function Login() {
-  const { iniciarSesion } = useApp();
-  const [codigo, setCodigo] = useState("");
+  const { iniciarSesion } = useSesion();
+  const [correo, setCorreo] = useState("");
   const [clave, setClave] = useState("");
   const [mostrarClave, setMostrarClave] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [entrando, setEntrando] = useState(false);
 
+  // Valor compartido para el desplazamiento horizontal de la animación Shake
+  const desplazamientoX = useSharedValue(0);
+  const {
+    estilo: estiloEscalaBoton,
+    onPressIn: onPressInBoton,
+    onPressOut: onPressOutBoton,
+  } = useEscalaAlPresionar();
+
+  // Estilo animado que aplica la traslación en X a la tarjeta
+  const estiloAnimado = useAnimatedStyle(() => ({
+    transform: [{ translateX: desplazamientoX.value }],
+  }));
+
+  // Dispara una secuencia de sacudida con amortiguación decreciente
+  function sacudirFormulario() {
+    // eslint-disable-next-line react-hooks/immutability
+    desplazamientoX.value = withSequence(
+      withTiming(-20, { duration: 70 }),
+      withTiming(20, { duration: 70 }),
+      withTiming(-14, { duration: 70 }),
+      withTiming(14, { duration: 70 }),
+      withTiming(-7, { duration: 70 }),
+      withTiming(0, { duration: 70 })
+    );
+  }
+
   async function entrar() {
+    const errorCorreo = validarCorreo(correo);
+    if (errorCorreo) {
+      setError(errorCorreo);
+      sacudirFormulario();
+      return;
+    }
+    if (!clave) {
+      setError("Escribe tu contraseña.");
+      sacudirFormulario();
+      return;
+    }
+
     setError(null);
     setEntrando(true);
-    const mensaje = await iniciarSesion(codigo, clave);
-    if (mensaje) {
-      setError(mensaje);
+    try {
+      await iniciarSesion(correo, clave);
+      // Si funciona, Stack.Protected cambia de pantalla solo.
+      // No se actualiza el estado aquí: esta pantalla se desmonta.
+    } catch (e) {
+      setError(mensajeDeError(e));
       setEntrando(false);
+      sacudirFormulario();
     }
   }
 
   return (
-    <SafeAreaView style={estilos.pantalla} edges={["top", "left", "right"]}>
+    <SafeAreaViewEstilizada className="flex-1 bg-lienzo" edges={["top", "left", "right"]}>
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
+        className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView
-          contentContainerStyle={estilos.scrollContenido}
+          contentContainerClassName="flex-grow pb-10"
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
           {/* Cabecera institucional fluida con el escudo de Quito */}
-          <View style={estilos.cabeceraInstitucional}>
+          <View className="relative items-center overflow-hidden rounded-b-[36px] bg-primario px-6 pb-9 pt-6">
             {/* Formas fluidas decorativas simulando gotas/ondas de agua */}
-            <View style={estilos.gotaDecorativa1} />
-            <View style={estilos.gotaDecorativa2} />
-            <View style={estilos.gotaDecorativa3} />
+            <View className="absolute -right-[30px] -top-[30px] h-[150px] w-[150px] rounded-full bg-white/10" />
+            <View className="absolute -bottom-10 -left-5 h-[130px] w-[130px] rounded-full bg-agua/15" />
+            <View className="absolute right-[15%] top-[30%] h-10 w-10 rounded-full bg-white/5" />
 
-            <View style={estilos.contenedorEscudo}>
-              <Image
+            <LogoZoom className="z-10 mb-3 h-[110px] w-20">
+              <ImagenEstilizada
                 source={require("../../../assets/images/logo-escudo.png")}
-                style={estilos.escudoLogo}
+                className="h-full w-full"
                 contentFit="contain"
                 transition={200}
               />
-            </View>
+            </LogoZoom>
 
-            <View style={estilos.bloqueMarca}>
-              <View style={estilos.pillEpmaps}>
-                <Text style={estilos.textoPillEpmaps}>
+            <View className="z-10 items-center gap-1.5">
+              <View className="rounded-full border border-white/30 bg-white/20 px-3 py-1">
+                <Text className="text-[11px] font-extrabold tracking-[1px] text-white">
                   EPMAPS · AGUA DE QUITO
                 </Text>
               </View>
-              <Text style={estilos.marcaTitulo}>EcoMedidores</Text>
-              <Text style={estilos.marcaSubtitulo}>
+              <Text className="text-[30px] font-black tracking-[0.5px] text-white">EcoMedidores</Text>
+              <Text className="text-center text-[13px] font-semibold text-agua">
                 Sistema de Registro y Verificación en Campo
               </Text>
             </View>
           </View>
 
           {/* Tarjeta de ingreso de personal */}
-          <View style={estilos.seccionFormulario}>
-            <View style={estilos.tarjetaIngreso}>
-              <View style={estilos.encabezadoTarjeta}>
-                <Text style={estilos.tituloIngreso}>Acceso del Técnico</Text>
-                <Text style={estilos.subtituloIngreso}>
-                  Ingrese sus credenciales asignadas para iniciar la jornada de
-                  lecturas.
+          <View className="mt-[-16px] gap-5 px-5">
+            <Animated.View className="gap-4 rounded-[20px] border-[1.5px] border-neutro bg-superficie p-[22px]" style={estiloAnimado}>
+              <View className="mb-0.5 gap-1">
+                <Text className="text-xl font-extrabold tracking-[0.2px] text-tinta">Acceso del Técnico</Text>
+                <Text className="text-[13px] leading-[18px] text-tinta-suave">
+                  Ingrese con el correo y la contraseña de su cuenta para
+                  iniciar la jornada de lecturas.
                 </Text>
               </View>
 
-              <View style={estilos.bloqueCampo}>
-                <Text style={estilos.etiquetaCampo}>CÓDIGO DE EMPLEADO</Text>
+              <View className="gap-1.5">
+                <Text className="text-[11px] font-extrabold tracking-[0.8px] text-tinta-suave">CORREO</Text>
                 <TextInput
-                  style={estilos.campoEntrada}
-                  value={codigo}
-                  onChangeText={setCodigo}
-                  placeholder="EMP-001"
-                  placeholderTextColor={tema.colores.neutro}
-                  autoCapitalize="characters"
+                  className="rounded-boton border-[1.5px] border-neutro bg-lienzo px-4 py-3.5 text-lg font-bold text-tinta"
+                  value={correo}
+                  onChangeText={setCorreo}
+                  placeholder="tecnico@correo.com"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoComplete="email"
                   autoCorrect={false}
+                  returnKeyType="next"
                 />
               </View>
 
-              <View style={estilos.bloqueCampo}>
-                <Text style={estilos.etiquetaCampo}>CLAVE DE SEGURIDAD</Text>
-                <View style={estilos.contenedorCampoClave}>
+              <View className="gap-1.5">
+                <Text className="text-[11px] font-extrabold tracking-[0.8px] text-tinta-suave">CONTRASEÑA</Text>
+                <View className="flex-row items-center rounded-boton border-[1.5px] border-neutro bg-lienzo pr-1.5">
                   <TextInput
-                    style={estilos.campoEntradaClave}
+                    className="flex-1 px-4 py-3.5 text-lg font-bold text-tinta"
                     value={clave}
                     onChangeText={setClave}
-                    placeholder="••••••••"
-                    placeholderTextColor={tema.colores.neutro}
+                    placeholder="*********"
                     secureTextEntry={!mostrarClave}
                     autoCapitalize="none"
+                    autoComplete="current-password"
                     autoCorrect={false}
+                    returnKeyType="go"
+                    onSubmitEditing={entrar}
                   />
                   <Pressable
-                    style={({ pressed }) => [
-                      estilos.botonMostrarClave,
-                      pressed && estilos.botonMostrarClavePresionado,
-                    ]}
+                    className="items-center justify-center rounded-lg bg-agua px-3 py-2"
+                    style={({ pressed }) => pressed ? { opacity: 0.7 } : undefined}
                     onPress={() => setMostrarClave((prev) => !prev)}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     accessibilityRole="button"
                     accessibilityLabel={
                       mostrarClave
-                        ? "Ocultar clave de seguridad"
-                        : "Mostrar clave de seguridad"
+                        ? "Ocultar contraseña"
+                        : "Mostrar contraseña"
                     }
                   >
-                    <Text style={estilos.textoBotonMostrarClave}>
-                      {mostrarClave ? "Ocultar" : "Mostar"}
+                    <Text className="text-xs font-extrabold tracking-[0.5px] text-primario">
+                      {mostrarClave ? "Ocultar" : "Mostrar"}
                     </Text>
                   </Pressable>
                 </View>
               </View>
 
+              <Pressable
+                className="self-end"
+                onPress={() =>
+                  irA(`/recuperar?correo=${encodeURIComponent(correo.trim())}`)
+                }
+                hitSlop={8}
+                accessibilityRole="link"
+              >
+                <Text className="text-sm font-extrabold text-primario underline">
+                  ¿Olvidaste tu contraseña?
+                </Text>
+              </Pressable>
+
               {error && (
-                <View style={estilos.cajaError}>
-                  <Text style={estilos.iconoError}>✕</Text>
-                  <Text style={estilos.textoError}>{error}</Text>
-                </View>
+                <AvisoAnimado className="flex-row items-center gap-2 rounded-boton border-[1.5px] border-error-borde bg-error-fondo p-3">
+                  <Text className="text-[13px] font-black text-error-texto">✕</Text>
+                  <Text className="flex-1 text-[13px] font-bold leading-[18px] text-error-texto">{error}</Text>
+                </AvisoAnimado>
               )}
 
-              <Pressable
-                style={({ pressed }) => [
-                  estilos.botonIngresar,
-                  pressed && {
-                    backgroundColor: tema.colores.primarioPresionado,
-                  },
-                  entrando && { opacity: 0.6 },
-                ]}
-                onPress={entrar}
-                disabled={entrando}
-              >
-                {entrando ? (
-                  <ActivityIndicator color="#FFFFFF" />
-                ) : (
-                  <Text style={estilos.textoBotonIngresar}>
-                    Ingresar al Módulo
-                  </Text>
-                )}
-              </Pressable>
-            </View>
+              <Animated.View style={estiloEscalaBoton}>
+                <Pressable
+                  className={`mt-1 min-h-[52px] items-center justify-center rounded-boton bg-primario py-4 ${entrando ? "opacity-60" : ""}`}
+                  style={({ pressed }) => pressed && !entrando ? { opacity: 0.85 } : undefined}
+                  onPress={entrar}
+                  onPressIn={onPressInBoton}
+                  onPressOut={onPressOutBoton}
+                  disabled={entrando}
+                >
+                  {entrando ? (
+                    <ActivityIndicator color="#FFFFFF" />
+                  ) : (
+                    <Text className="text-base font-extrabold tracking-[0.3px] text-white">
+                      Ingresar al Módulo
+                    </Text>
+                  )}
+                </Pressable>
+              </Animated.View>
+            </Animated.View>
 
-            <View style={estilos.pieInstitucional}>
-              <Text style={estilos.textoPie}>
+            <Entrada orden={3} className="items-center gap-3 px-4">
+              <View className="flex-row items-center gap-1.5">
+                <Text className="text-sm font-semibold text-tinta-suave">¿Aún no tienes cuenta?</Text>
+                <Pressable
+                  onPress={() => irA("/registro")}
+                  hitSlop={8}
+                  accessibilityRole="link"
+                >
+                  <Text className="text-sm font-extrabold text-primario underline">Crea una</Text>
+                </Pressable>
+              </View>
+              <Text className="text-center text-[11px] font-bold text-tinta-suave">
                 Empresa Pública Metropolitana de Agua Potable y Saneamiento
               </Text>
-            </View>
+            </Entrada>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </SafeAreaViewEstilizada>
   );
 }
-
-const estilos = StyleSheet.create({
-  pantalla: {
-    flex: 1,
-    backgroundColor: tema.colores.fondo,
-  },
-  scrollContenido: {
-    flexGrow: 1,
-    paddingBottom: 40,
-  },
-  cabeceraInstitucional: {
-    backgroundColor: tema.colores.primario,
-    paddingTop: 24,
-    paddingBottom: 36,
-    paddingHorizontal: 24,
-    alignItems: "center",
-    borderBottomLeftRadius: 36,
-    borderBottomRightRadius: 36,
-    overflow: "hidden",
-    position: "relative",
-  },
-  gotaDecorativa1: {
-    position: "absolute",
-    top: -30,
-    right: -30,
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
-  },
-  gotaDecorativa2: {
-    position: "absolute",
-    bottom: -40,
-    left: -20,
-    width: 130,
-    height: 130,
-    borderRadius: 65,
-    backgroundColor: "rgba(212, 230, 243, 0.12)",
-  },
-  gotaDecorativa3: {
-    position: "absolute",
-    top: "30%",
-    right: "15%",
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: "rgba(255, 255, 255, 0.05)",
-  },
-  contenedorEscudo: {
-    width: 80,
-    height: 110,
-    marginBottom: 12,
-    zIndex: 1,
-  },
-  escudoLogo: {
-    width: "100%",
-    height: "100%",
-  },
-  bloqueMarca: {
-    alignItems: "center",
-    gap: 6,
-    zIndex: 1,
-  },
-  pillEpmaps: {
-    backgroundColor: "rgba(255, 255, 255, 0.18)",
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: tema.radioPill,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.3)",
-  },
-  textoPillEpmaps: {
-    color: "#FFFFFF",
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 1,
-  },
-  marcaTitulo: {
-    fontSize: 30,
-    fontWeight: "900",
-    color: "#FFFFFF",
-    letterSpacing: 0.5,
-  },
-  marcaSubtitulo: {
-    fontSize: 13,
-    color: tema.colores.fondoSuave,
-    fontWeight: "600",
-    textAlign: "center",
-  },
-  seccionFormulario: {
-    paddingHorizontal: 20,
-    marginTop: -16,
-    gap: 20,
-  },
-  tarjetaIngreso: {
-    backgroundColor: tema.colores.superficie,
-    borderRadius: 20,
-    padding: 22,
-    gap: 16,
-    borderWidth: 1.5,
-    borderColor: tema.colores.neutro,
-  },
-  encabezadoTarjeta: {
-    gap: 4,
-    marginBottom: 2,
-  },
-  tituloIngreso: {
-    fontSize: 20,
-    fontWeight: "800",
-    color: tema.colores.textoPrincipal,
-    letterSpacing: 0.2,
-  },
-  subtituloIngreso: {
-    fontSize: 13,
-    color: tema.colores.textoSecundario,
-    lineHeight: 18,
-  },
-  bloqueCampo: {
-    gap: 6,
-  },
-  etiquetaCampo: {
-    fontSize: 11,
-    fontWeight: "800",
-    color: tema.colores.textoSecundario,
-    letterSpacing: 0.8,
-  },
-  campoEntrada: {
-    borderWidth: 1.5,
-    borderColor: tema.colores.neutro,
-    borderRadius: tema.radioBoton,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 18,
-    fontWeight: "700",
-    color: tema.colores.textoPrincipal,
-    backgroundColor: tema.colores.fondo,
-  },
-  contenedorCampoClave: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1.5,
-    borderColor: tema.colores.neutro,
-    borderRadius: tema.radioBoton,
-    backgroundColor: tema.colores.fondo,
-    paddingRight: 6,
-  },
-  campoEntradaClave: {
-    flex: 1,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 18,
-    fontWeight: "700",
-    color: tema.colores.textoPrincipal,
-  },
-  botonMostrarClave: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: tema.colores.fondoSuave,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  botonMostrarClavePresionado: {
-    opacity: 0.7,
-    backgroundColor: tema.colores.neutro,
-  },
-  textoBotonMostrarClave: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: tema.colores.primario,
-    letterSpacing: 0.5,
-  },
-  cajaError: {
-    backgroundColor: tema.colores.criticoFondo,
-    borderColor: tema.colores.criticoBorde,
-    borderWidth: 1.5,
-    borderRadius: tema.radioBoton,
-    padding: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  iconoError: {
-    color: tema.colores.criticoTexto,
-    fontSize: 13,
-    fontWeight: "900",
-  },
-  textoError: {
-    color: tema.colores.criticoTexto,
-    fontSize: 13,
-    fontWeight: "700",
-    flex: 1,
-    lineHeight: 18,
-  },
-  botonIngresar: {
-    backgroundColor: tema.colores.primario,
-    borderRadius: tema.radioBoton,
-    paddingVertical: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 6,
-    minHeight: 52,
-  },
-  textoBotonIngresar: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "800",
-    letterSpacing: 0.3,
-  },
-  pieInstitucional: {
-    alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 16,
-  },
-  textoPie: {
-    fontSize: 11,
-    color: tema.colores.textoSecundario,
-    fontWeight: "700",
-    textAlign: "center",
-  },
-  textoVersion: {
-    fontSize: 11,
-    color: tema.colores.textoSecundario,
-    fontWeight: "500",
-    textAlign: "center",
-  },
-});

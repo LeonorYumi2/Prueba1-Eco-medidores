@@ -1,5 +1,5 @@
 // R2 y R3: consulta de medidores. R4, R8, R10: punto de partida del registro.
-import { Image } from "expo-image";
+// ADR-009: la sesión viene de Firebase (useSesion), no de AppContext.
 import { useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -7,15 +7,15 @@ import {
   Platform,
   Pressable,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { SafeAreaViewEstilizada } from "../../componentes/SafeAreaViewEstilizada";
+import { ImagenEstilizada } from "../../componentes/ImagenEstilizada";
 import { Aviso, Boton, Fila, Tarjeta } from "../../componentes/Piezas";
-import { tema } from "../../constants/tema";
 import { useApp } from "../../contexto/AppContext";
+import { useSesion } from "../../contexto/sesion";
 import { irA } from "../../rutas";
 import { queryClient } from "../../servicios/clienteConsultas";
 import {
@@ -48,44 +48,40 @@ const fechaDeSegundos = (segundos: number) =>
 
 function etiquetaEnvio(l: Lectura): {
   texto: string;
-  color: string;
-  fondo: string;
-  borde: string;
+  clasesChip: string;
+  claseTexto: string;
 } {
   if (l.envio === "enviada") {
     return {
-      texto: "✓ Enviada",
-      color: tema.colores.enviadaTexto,
-      fondo: tema.colores.enviadaFondo,
-      borde: tema.colores.enviadaBorde,
+      texto: "? Enviada",
+      clasesChip: "bg-exito-fondo border-exito-borde",
+      claseTexto: "text-exito-texto",
     };
   }
   if (l.envio === "conflicto") {
     return {
-      texto: "✕ En conflicto",
-      color: tema.colores.criticoTexto,
-      fondo: tema.colores.criticoFondo,
-      borde: tema.colores.criticoBorde,
+      texto: "? En conflicto",
+      clasesChip: "bg-error-fondo border-error-borde",
+      claseTexto: "text-error-texto",
     };
   }
   if (!l.verificada) {
     return {
-      texto: "◷ Por verificar",
-      color: tema.colores.calidoTexto,
-      fondo: tema.colores.calidoFondo,
-      borde: tema.colores.calidoBorde,
+      texto: "? Por verificar",
+      clasesChip: "bg-aviso-fondo border-aviso-borde",
+      claseTexto: "text-aviso-texto",
     };
   }
   return {
-    texto: "↑ Por enviar",
-    color: tema.colores.textoPrincipal,
-    fondo: tema.colores.fondoSuave,
-    borde: tema.colores.primario,
+    texto: "? Por enviar",
+    clasesChip: "bg-agua border-primario",
+    claseTexto: "text-tinta",
   };
 }
 
 export default function Inicio() {
-  const { estado, cerrarSesion, iniciarBorrador, descartarBorrador } = useApp();
+  const { estado, iniciarBorrador, descartarBorrador } = useApp();
+  const { usuario, nombre, cerrarSesion } = useSesion();
   const [codigo, setCodigo] = useState("");
   const [errorCodigo, setErrorCodigo] = useState<string | null>(null);
   const [codigoConsultado, setCodigoConsultado] = useState<string | null>(null);
@@ -93,7 +89,11 @@ export default function Inicio() {
   const [lecturas, setLecturas] = useState<Lectura[]>([]);
 
   // useConsultaMedidor sustituye la llamada directa a consultarMedidor y los estados resultado y consultando (ADR-003).
-  const { cargando: consultando, resultado, refetch } = useConsultaMedidor(codigoConsultado);
+  const {
+    cargando: consultando,
+    resultado,
+    refetch,
+  } = useConsultaMedidor(codigoConsultado);
 
   const refrescarLecturas = useCallback(async () => {
     setLecturas(await listarLecturas());
@@ -145,7 +145,11 @@ export default function Inicio() {
       // Al pulsar Consultar con un código ya consultado, volver a evaluar la vigencia (refrescar solo si el dato no es de hoy).
       const estadoQuery = queryClient.getQueryState(claveMedidor(codigoFinal));
       const dataUpdatedAt = estadoQuery?.dataUpdatedAt ?? 0;
-      if (!dataUpdatedAt || !esDeHoy(dataUpdatedAt) || estadoQuery?.status === "error") {
+      if (
+        !dataUpdatedAt ||
+        !esDeHoy(dataUpdatedAt) ||
+        estadoQuery?.status === "error"
+      ) {
         void refetch();
       }
     } else {
@@ -235,7 +239,7 @@ export default function Inicio() {
         />
       );
     return (
-      <View style={estilos.contenedorAcciones}>
+      <View className="gap-3">
         <Aviso
           tipo="aviso"
           texto="No hay datos de este medidor. Puedes registrar la lectura igualmente; quedará pendiente de verificar."
@@ -250,64 +254,78 @@ export default function Inicio() {
   }
 
   return (
-    <SafeAreaView style={estilos.pantalla} edges={["top", "left", "right"]}>
+    <SafeAreaViewEstilizada className="flex-1 bg-lienzo" edges={["top", "left", "right"]}>
       {/* Encabezado institucional EPMAPS con logo y ondas de agua */}
-      <View style={estilos.barra}>
-        <View style={estilos.gotaOnda1} />
-        <View style={estilos.gotaOnda2} />
+      <View className="relative overflow-hidden rounded-b-[24px] bg-primario px-5 pb-4 pt-3">
+        <View className="absolute -right-5 -top-5 h-[120px] w-[120px] rounded-full bg-white/10" />
+        <View className="absolute -bottom-[30px] left-1/5 h-[90px] w-[90px] rounded-full bg-agua/10" />
 
-        <View style={estilos.filaCabecera}>
-          <Image
+        <View className="z-10 flex-row items-center gap-3">
+          <ImagenEstilizada
             source={require("../../../assets/images/logo-escudo.png")}
-            style={estilos.escudoCabecera}
+            className="h-[46px] w-8"
             contentFit="contain"
           />
-          <View style={estilos.infoUsuario}>
-            <Text style={estilos.barraTitulo}>EcoMedidores</Text>
-            <Text style={estilos.barraSub}>
-              Técnico {estado.sesion?.codigo} · {estado.pendientes} pendiente
+          <View className="flex-1 gap-0.5">
+            <Text className="text-xl font-extrabold tracking-[0.3px] text-white">EcoMedidores</Text>
+            <Text className="text-[13px] font-semibold text-agua" numberOfLines={1}>
+              {nombre || usuario?.email} · {estado.pendientes} pendiente
               {estado.pendientes === 1 ? "" : "s"}
             </Text>
           </View>
-          <Pressable
-            onPress={cerrarSesion}
-            style={({ pressed }) => [
-              estilos.botonSalir,
-              pressed && { opacity: 0.8 },
-            ]}
-            hitSlop={8}
-          >
-            <Text style={estilos.textoBotonSalir}>Salir</Text>
-          </Pressable>
+          <View className="flex-row items-center gap-2">
+            <Pressable
+              onPress={() => irA("/perfil")}
+              className="rounded-boton border-[1.5px] border-white/35 bg-white/15 px-3 py-2"
+              style={({ pressed }) => pressed ? { opacity: 0.8 } : undefined}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Abrir mi perfil"
+            >
+              <Text className="text-[13px] font-extrabold text-white">Perfil</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => void cerrarSesion()}
+              className="rounded-boton border-[1.5px] border-white/35 bg-white/15 px-3 py-2"
+              style={({ pressed }) => pressed ? { opacity: 0.8 } : undefined}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Cerrar sesión"
+            >
+              <Text className="text-[13px] font-extrabold text-white">Salir</Text>
+            </Pressable>
+          </View>
         </View>
       </View>
 
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
+        className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView
-          contentContainerStyle={estilos.contenido}
+          contentContainerClassName="gap-4 p-[18px] pb-9"
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
           {/* Tarjeta de borrador pendiente */}
           {estado.borrador && (
             <Tarjeta>
-              <View style={estilos.cabeceraBorrador}>
-                <View style={estilos.badgeBorrador}>
-                  <Text style={estilos.textoBadgeBorrador}>◷ EN CURSO</Text>
+              <View className="flex-row items-center gap-2.5">
+                <View className="rounded-full border-[1.5px] border-aviso-borde bg-aviso-fondo px-2.5 py-1">
+                  <Text className="text-[11px] font-extrabold tracking-[0.5px] text-aviso-texto">⏳ EN CURSO</Text>
                 </View>
-                <Text style={estilos.tituloBorrador}>Registro sin terminar</Text>
+                <Text className="text-[17px] font-extrabold text-tinta">
+                  Registro sin terminar
+                </Text>
               </View>
-              <Text style={estilos.texto}>
+              <Text className="text-sm leading-5 text-tinta-suave">
                 Medidor{" "}
-                <Text style={estilos.negrita}>
+                <Text className="font-extrabold text-tinta">
                   {estado.borrador.medidorCodigo}
                 </Text>
                 . Puedes continuar donde lo dejaste o descartarlo.
               </Text>
-              <View style={estilos.accionesBorrador}>
+              <View className="mt-1 gap-2.5">
                 <Boton texto="Continuar registro" onPress={continuarBorrador} />
                 <Boton
                   texto="Descartar"
@@ -320,19 +338,19 @@ export default function Inicio() {
 
           {/* Formulario de consulta */}
           <Tarjeta>
-            <Text style={estilos.titulo}>Consultar medidor</Text>
-            <Text style={estilos.descripcionCampo}>
-              Ingrese el código para verificar el estado de la cuenta y lecturas registradas.
+            <Text className="text-lg font-extrabold tracking-[0.2px] text-tinta">Consultar medidor</Text>
+            <Text className="text-sm leading-5 text-tinta-suave">
+              Ingrese el código para verificar el estado de la cuenta y
+              lecturas registradas.
             </Text>
             <TextInput
-              style={[estilos.campo, errorCodigo && estilos.campoError]}
+              className={`rounded-boton border-[1.5px] px-4 py-3.5 text-xl font-extrabold tracking-[1.5px] ${errorCodigo ? "border-critico bg-error-fondo" : "border-neutro bg-lienzo"} text-tinta`}
               value={codigo}
               onChangeText={(texto) => {
                 setCodigo(texto);
                 setErrorCodigo(null);
               }}
               placeholder="MED-100001"
-              placeholderTextColor={tema.colores.neutro}
               autoCapitalize="characters"
               autoCorrect={false}
               maxLength={10}
@@ -361,16 +379,18 @@ export default function Inicio() {
           {/* Ficha técnica del medidor consultado (7 datos visibles) */}
           {resultado?.tipo === "ok" && (
             <Tarjeta>
-              <View style={estilos.cabeceraResultado}>
-                <View style={{ flex: 1 }}>
-                  <Text style={estilos.subtituloMedidor}>FICHA TÉCNICA DEL MEDIDOR</Text>
-                  <Text style={estilos.codigoMedidor}>
+              <View className="flex-row items-start justify-between gap-3">
+                <View className="flex-1">
+                  <Text className="text-[11px] font-extrabold uppercase tracking-[0.8px] text-tinta-suave">
+                    FICHA TÉCNICA DEL MEDIDOR
+                  </Text>
+                  <Text className="mt-0.5 text-[26px] font-black tracking-[0.5px] text-tinta">
                     {resultado.medidor.codigo}
                   </Text>
                 </View>
-                <View style={estilos.badgeEstadoMedidor}>
-                  <Text style={estilos.textoBadgeEstadoMedidor}>
-                    • {resultado.medidor.estado.toUpperCase()}
+                <View className="rounded-full border-[1.5px] border-info-borde bg-info-fondo px-2.5 py-1">
+                  <Text className="text-xs font-extrabold tracking-[0.5px] text-tinta">
+                    ⬢ {resultado.medidor.estado.toUpperCase()}
                   </Text>
                 </View>
               </View>
@@ -387,8 +407,14 @@ export default function Inicio() {
                 />
               ) : null}
 
-              <Fila etiqueta="Dirección del predio" valor={resultado.medidor.direccion} />
-              <Fila etiqueta="Sector de distribución" valor={resultado.medidor.sector} />
+              <Fila
+                etiqueta="Dirección del predio"
+                valor={resultado.medidor.direccion}
+              />
+              <Fila
+                etiqueta="Sector de distribución"
+                valor={resultado.medidor.sector}
+              />
               <Fila
                 etiqueta="Número de cuenta"
                 valor={resultado.medidor.numeroCuenta}
@@ -412,80 +438,65 @@ export default function Inicio() {
 
           {/* Historial de lecturas: tarjetas limpias y legibles bajo el sol */}
           {lecturas.length > 0 && (
-            <View style={estilos.seccionHistorial}>
-              <View style={estilos.cabeceraHistorial}>
-                <Text style={estilos.tituloSeccion}>Bitácora de lecturas</Text>
-                <View style={estilos.contadorHistorial}>
-                  <Text style={estilos.textoContadorHistorial}>
+            <View className="mt-1.5 gap-3">
+              <View className="flex-row items-center justify-between px-1">
+                <Text className="text-lg font-extrabold tracking-[0.2px] text-tinta">Bitácora de lecturas</Text>
+                <View className="rounded-full border border-primario bg-agua px-2.5 py-1">
+                  <Text className="text-xs font-extrabold text-tinta">
                     {lecturas.length}{" "}
                     {lecturas.length === 1 ? "registro" : "registros"}
                   </Text>
                 </View>
               </View>
 
-              <View style={estilos.listaLecturas}>
+              <View className="gap-2.5">
                 {lecturas.map((l) => {
                   const etiqueta = etiquetaEnvio(l);
                   return (
                     <View
                       key={`${l.medidorCodigo}:${l.mes}`}
-                      style={estilos.tarjetaLectura}
+                      className="gap-3 rounded-tarjeta border-[1.5px] border-neutro bg-superficie p-4"
                     >
-                      <View style={estilos.cabeceraLectura}>
-                        <View style={{ flex: 1 }}>
-                          <Text style={estilos.itemCodigo}>
+                      <View className="flex-row items-start justify-between gap-2.5">
+                        <View className="flex-1">
+                          <Text className="text-[17px] font-extrabold tracking-[0.3px] text-tinta">
                             {l.medidorCodigo}
                           </Text>
-                          <Text style={estilos.itemPeriodo}>
+                          <Text className="mt-0.5 text-[13px] font-semibold text-tinta-suave">
                             Periodo: {l.mes}
                           </Text>
                         </View>
-                        <View
-                          style={[
-                            estilos.chipEstado,
-                            {
-                              backgroundColor: etiqueta.fondo,
-                              borderColor: etiqueta.borde,
-                            },
-                          ]}
-                        >
-                          <Text
-                            style={[
-                              estilos.textoChip,
-                              { color: etiqueta.color },
-                            ]}
-                          >
+                        <View className={`rounded-full border-[1.5px] px-2.5 py-1 ${etiqueta.clasesChip}`}>
+                          <Text className={`text-xs font-extrabold ${etiqueta.claseTexto}`}>
                             {etiqueta.texto}
                           </Text>
                         </View>
                       </View>
 
-                      <View style={estilos.cuerpoLectura}>
-                        <View style={estilos.columnaDato}>
-                          <Text style={estilos.etiquetaDato}>Condición</Text>
-                          <Text style={estilos.valorDato}>
+                      <View className="flex-row items-center gap-5 border-t border-agua pt-2.5">
+                        <View className="gap-0.5">
+                          <Text className="text-[11px] font-bold uppercase tracking-[0.5px] text-tinta-suave">Condición</Text>
+                          <Text className="text-[15px] font-extrabold text-tinta">
                             {l.estadoMedidor === "normal"
-                              ? "• Normal"
+                              ? "⬢ Normal"
                               : l.estadoMedidor === "inaccesible"
-                                ? "⊘ Inaccesible"
-                                : "▲ Dañado"}
+                                ? "? Inaccesible"
+                                : "? Da?ado"}
                           </Text>
                         </View>
 
                         {l.consumo !== null && (
-                          <View style={estilos.columnaDato}>
-                            <Text style={estilos.etiquetaDato}>Consumo</Text>
-                            <Text style={estilos.valorDato}>
+                          <View className="gap-0.5">
+                            <Text className="text-[11px] font-bold uppercase tracking-[0.5px] text-tinta-suave">Consumo</Text>
+                            <Text className="text-[15px] font-extrabold text-tinta">
                               {l.consumo} m³
                             </Text>
                           </View>
                         )}
 
                         {l.anomalo && (
-                          <View style={estilos.badgeAnomalo}>
-                            <Text style={estilos.textoBadgeAnomalo}>
-                              ▲ Anómalo
-                            </Text>
+                          <View className="ml-auto rounded-full border-[1.5px] border-error-borde bg-error-fondo px-2 py-1">
+                            <Text className="text-[11px] font-extrabold text-error-texto">⚠ Anómalo</Text>
                           </View>
                         )}
                       </View>
@@ -497,290 +508,6 @@ export default function Inicio() {
           )}
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </SafeAreaViewEstilizada>
   );
 }
-
-const estilos = StyleSheet.create({
-  pantalla: {
-    flex: 1,
-    backgroundColor: tema.colores.fondo,
-  },
-  barra: {
-    backgroundColor: tema.colores.primario,
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 16,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    overflow: "hidden",
-    position: "relative",
-  },
-  gotaOnda1: {
-    position: "absolute",
-    top: -20,
-    right: -20,
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
-  },
-  gotaOnda2: {
-    position: "absolute",
-    bottom: -30,
-    left: "20%",
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: "rgba(212, 230, 243, 0.1)",
-  },
-  filaCabecera: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    zIndex: 1,
-  },
-  escudoCabecera: {
-    width: 32,
-    height: 46,
-  },
-  infoUsuario: {
-    flex: 1,
-    gap: 2,
-  },
-  barraTitulo: {
-    color: "#FFFFFF",
-    fontSize: 20,
-    fontWeight: "800",
-    letterSpacing: 0.3,
-  },
-  barraSub: {
-    color: tema.colores.fondoSuave,
-    fontSize: 13,
-    fontWeight: "600",
-  },
-  botonSalir: {
-    borderWidth: 1.5,
-    borderColor: "rgba(255, 255, 255, 0.35)",
-    backgroundColor: "rgba(255, 255, 255, 0.15)",
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: tema.radioBoton,
-  },
-  textoBotonSalir: {
-    color: "#FFFFFF",
-    fontSize: 13,
-    fontWeight: "800",
-  },
-  contenido: {
-    padding: 18,
-    gap: 16,
-    paddingBottom: 36,
-  },
-  titulo: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: tema.colores.textoPrincipal,
-    letterSpacing: 0.2,
-  },
-  descripcionCampo: {
-    fontSize: 14,
-    color: tema.colores.textoSecundario,
-    lineHeight: 20,
-  },
-  texto: {
-    fontSize: 14,
-    color: tema.colores.textoSecundario,
-    lineHeight: 20,
-  },
-  negrita: {
-    fontWeight: "800",
-    color: tema.colores.textoPrincipal,
-  },
-  campo: {
-    borderWidth: 1.5,
-    borderColor: tema.colores.neutro,
-    borderRadius: tema.radioBoton,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 20,
-    letterSpacing: 1.5,
-    fontWeight: "800",
-    color: tema.colores.textoPrincipal,
-    backgroundColor: tema.colores.fondo,
-  },
-  campoError: {
-    borderColor: tema.colores.critico,
-    backgroundColor: tema.colores.criticoFondo,
-  },
-  cabeceraBorrador: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  badgeBorrador: {
-    backgroundColor: tema.colores.calidoFondo,
-    borderColor: tema.colores.calidoBorde,
-    borderWidth: 1.5,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: tema.radioPill,
-  },
-  textoBadgeBorrador: {
-    color: tema.colores.calidoTexto,
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 0.5,
-  },
-  tituloBorrador: {
-    fontSize: 17,
-    fontWeight: "800",
-    color: tema.colores.textoPrincipal,
-  },
-  accionesBorrador: {
-    gap: 10,
-    marginTop: 4,
-  },
-  cabeceraResultado: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: 12,
-  },
-  subtituloMedidor: {
-    fontSize: 11,
-    fontWeight: "800",
-    color: tema.colores.textoSecundario,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-  },
-  codigoMedidor: {
-    fontSize: 26,
-    fontWeight: "900",
-    color: tema.colores.textoPrincipal,
-    letterSpacing: 0.5,
-    marginTop: 2,
-  },
-  badgeEstadoMedidor: {
-    backgroundColor: tema.colores.infoFondo,
-    borderColor: tema.colores.infoBorde,
-    borderWidth: 1.5,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: tema.radioPill,
-  },
-  textoBadgeEstadoMedidor: {
-    color: tema.colores.textoPrincipal,
-    fontSize: 12,
-    fontWeight: "800",
-    letterSpacing: 0.5,
-  },
-  contenedorAcciones: {
-    gap: 12,
-  },
-  seccionHistorial: {
-    gap: 12,
-    marginTop: 6,
-  },
-  cabeceraHistorial: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 4,
-  },
-  tituloSeccion: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: tema.colores.textoPrincipal,
-    letterSpacing: 0.2,
-  },
-  contadorHistorial: {
-    backgroundColor: tema.colores.fondoSuave,
-    borderColor: tema.colores.primario,
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: tema.radioPill,
-  },
-  textoContadorHistorial: {
-    fontSize: 12,
-    fontWeight: "800",
-    color: tema.colores.textoPrincipal,
-  },
-  listaLecturas: {
-    gap: 10,
-  },
-  tarjetaLectura: {
-    backgroundColor: tema.colores.superficie,
-    borderRadius: tema.radio,
-    borderWidth: 1.5,
-    borderColor: tema.colores.neutro,
-    padding: 16,
-    gap: 12,
-  },
-  cabeceraLectura: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-    gap: 10,
-  },
-  itemCodigo: {
-    fontSize: 17,
-    fontWeight: "800",
-    color: tema.colores.textoPrincipal,
-    letterSpacing: 0.3,
-  },
-  itemPeriodo: {
-    fontSize: 13,
-    color: tema.colores.textoSecundario,
-    marginTop: 2,
-    fontWeight: "600",
-  },
-  chipEstado: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: tema.radioPill,
-    borderWidth: 1.5,
-  },
-  textoChip: {
-    fontSize: 12,
-    fontWeight: "800",
-  },
-  cuerpoLectura: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 20,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    borderTopColor: tema.colores.fondoSuave,
-  },
-  columnaDato: {
-    gap: 2,
-  },
-  etiquetaDato: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: tema.colores.textoSecundario,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  valorDato: {
-    fontSize: 15,
-    fontWeight: "800",
-    color: tema.colores.textoPrincipal,
-  },
-  badgeAnomalo: {
-    marginLeft: "auto",
-    backgroundColor: tema.colores.criticoFondo,
-    borderColor: tema.colores.criticoBorde,
-    borderWidth: 1.5,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: tema.radioPill,
-  },
-  textoBadgeAnomalo: {
-    fontSize: 11,
-    fontWeight: "800",
-    color: tema.colores.criticoTexto,
-  },
-});

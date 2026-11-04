@@ -3,15 +3,14 @@ import { Directory, File, Paths } from "expo-file-system";
 import * as ImagePicker from "expo-image-picker";
 import { Redirect } from "expo-router";
 import { useEffect, useState } from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Image, Pressable, Text, View } from "react-native";
+import { SafeAreaViewEstilizada } from "../../../componentes/SafeAreaViewEstilizada";
 import {
   Aviso,
   BarraSuperior,
   Boton,
   Tarjeta,
 } from "../../../componentes/Piezas";
-import { tema } from "../../../constants/tema";
 import { useApp } from "../../../contexto/AppContext";
 import { irA, volver } from "../../../rutas";
 import { calcular } from "../../../servicios/calculos";
@@ -110,31 +109,26 @@ function CapturaFoto({ borrador }: { borrador: Borrador }) {
   const permisoDenegado = estadoPermiso?.granted === false;
 
   return (
-    <SafeAreaView style={estilos.pantalla} edges={["top", "left", "right"]}>
+    <SafeAreaViewEstilizada className="flex-1 bg-lienzo" edges={["top", "left", "right"]}>
       <BarraSuperior
         titulo="Foto del medidor"
         subtitulo={`${borrador.medidorCodigo} · Paso 2 de 3`}
         onVolver={volverAlEstado}
       />
-      <View style={estilos.contenido}>
+      <View className="flex-1 justify-between gap-4 p-[18px] pb-5">
         <Tarjeta>
-          <View style={estilos.encabezadoTarjeta}>
-            <View style={{ flex: 1 }}>
-              <Text style={estilos.titulo}>Evidencia fotográfica</Text>
-              <Text style={estilos.descripcion}>
+          <View className="flex-row items-start gap-3">
+            <View className="flex-1">
+              <Text className="text-lg font-extrabold tracking-[0.2px] text-tinta">Evidencia fotográfica</Text>
+              <Text className="mt-1 text-sm leading-5 text-tinta-suave">
                 Capture una toma clara y enfocada de la carátula del medidor y su contador.
               </Text>
             </View>
             <View
-              style={[
-                estilos.etiquetaRequerida,
-                obligatoria ? estilos.requerida : estilos.opcional,
-              ]}
+              className={`rounded-full border-[1.5px] px-2.5 py-1 ${obligatoria ? "border-error-borde bg-error-fondo" : "border-info-borde bg-info-fondo"}`}
             >
               <Text
-                style={
-                  obligatoria ? estilos.textoRequerida : estilos.textoOpcional
-                }
+                className={`text-[11px] font-extrabold tracking-[0.4px] ${obligatoria ? "text-error-texto" : "text-tinta"}`}
               >
                 {obligatoria ? "▲ Obligatoria" : "• Opcional"}
               </Text>
@@ -142,42 +136,40 @@ function CapturaFoto({ borrador }: { borrador: Borrador }) {
           </View>
 
           {borrador.fotoUri ? (
-            <View style={estilos.contenedorPreview}>
-              <View style={estilos.marcoFoto}>
+            <View className="mt-1.5 gap-3">
+              <View className="h-[240px] overflow-hidden rounded-tarjeta border-[1.5px] border-neutro bg-black">
                 <Image
                   source={{ uri: borrador.fotoUri }}
-                  style={estilos.preview}
+                  className="h-full w-full"
                   resizeMode="cover"
                 />
-                <View style={estilos.insigniaFoto}>
-                  <Text style={estilos.textoInsignia}>✓ Foto guardada</Text>
+                <View className="absolute right-3 top-3 rounded-full bg-tinta/90 px-3 py-1.5">
+                  <Text className="text-xs font-extrabold text-white">✓ Foto guardada</Text>
                 </View>
               </View>
               <Pressable
                 onPress={tomarFoto}
                 disabled={guardando}
-                style={({ pressed }) => [
-                  estilos.botonCambiar,
-                  pressed && { backgroundColor: tema.colores.fondoSuave },
-                ]}
+                className="min-h-[50px] items-center justify-center rounded-boton border-[1.5px] border-primario bg-superficie py-3.5"
+                style={({ pressed }) => pressed ? { opacity: 0.8 } : undefined}
               >
-                <Text style={estilos.textoCambiar}>
+                <Text className="text-[15px] font-extrabold text-tinta">
                   {guardando ? "Guardando…" : "Tomar otra fotografía"}
                 </Text>
               </Pressable>
             </View>
           ) : (
-            <View style={estilos.zonaCaptura}>
-              <View style={estilos.circuloIcono}>
-                <Text style={estilos.textoIcono}>FOTO</Text>
+            <View className="mt-1.5 items-center gap-3.5 rounded-tarjeta border-2 border-dashed border-neutro bg-lienzo p-6">
+              <View className="h-[60px] w-[60px] items-center justify-center rounded-full border-[1.5px] border-primario bg-agua">
+                <Text className="text-xs font-black tracking-[0.8px] text-tinta">FOTO</Text>
               </View>
-              <View style={estilos.textosZonaCaptura}>
-                <Text style={estilos.textoVacio}>Aún no se ha tomado una foto</Text>
-                <Text style={estilos.textoAyudaCaptura}>
+              <View className="items-center gap-1">
+                <Text className="text-base font-extrabold text-tinta">Aún no se ha tomado una foto</Text>
+                <Text className="text-center text-[13px] leading-[18px] text-tinta-suave">
                   Asegure buena iluminación para garantizar la legibilidad en auditoría.
                 </Text>
               </View>
-              <View style={estilos.anchoBotonFoto}>
+              <View className="mt-1.5 w-full">
                 <Boton
                   texto="Tomar foto con la cámara"
                   onPress={tomarFoto}
@@ -200,7 +192,7 @@ function CapturaFoto({ borrador }: { borrador: Borrador }) {
         )}
         {error && <Aviso tipo="error" texto={error} />}
 
-        <View style={estilos.acciones}>
+        <View className="gap-3 pb-2">
           <Boton
             texto="Continuar"
             onPress={continuar}
@@ -214,158 +206,6 @@ function CapturaFoto({ borrador }: { borrador: Borrador }) {
           />
         </View>
       </View>
-    </SafeAreaView>
+    </SafeAreaViewEstilizada>
   );
 }
-
-const estilos = StyleSheet.create({
-  pantalla: {
-    flex: 1,
-    backgroundColor: tema.colores.fondo,
-  },
-  contenido: {
-    flex: 1,
-    padding: 18,
-    gap: 16,
-    justifyContent: "space-between",
-    paddingBottom: 20,
-  },
-  encabezadoTarjeta: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 12,
-  },
-  titulo: {
-    color: tema.colores.textoPrincipal,
-    fontSize: 18,
-    fontWeight: "800",
-    letterSpacing: 0.2,
-  },
-  descripcion: {
-    color: tema.colores.textoSecundario,
-    fontSize: 14,
-    lineHeight: 20,
-    marginTop: 4,
-  },
-  etiquetaRequerida: {
-    borderRadius: tema.radioPill,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderWidth: 1.5,
-  },
-  requerida: {
-    backgroundColor: tema.colores.criticoFondo,
-    borderColor: tema.colores.criticoBorde,
-  },
-  opcional: {
-    backgroundColor: tema.colores.infoFondo,
-    borderColor: tema.colores.infoBorde,
-  },
-  textoRequerida: {
-    color: tema.colores.criticoTexto,
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 0.4,
-  },
-  textoOpcional: {
-    color: tema.colores.textoPrincipal,
-    fontSize: 11,
-    fontWeight: "800",
-    letterSpacing: 0.4,
-  },
-  contenedorPreview: {
-    marginTop: 6,
-    gap: 12,
-  },
-  marcoFoto: {
-    height: 240,
-    borderRadius: tema.radio,
-    overflow: "hidden",
-    backgroundColor: "#000000",
-    borderWidth: 1.5,
-    borderColor: tema.colores.neutro,
-  },
-  preview: {
-    width: "100%",
-    height: "100%",
-  },
-  insigniaFoto: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-    backgroundColor: "rgba(39, 53, 124, 0.9)",
-    borderRadius: tema.radioPill,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-  },
-  textoInsignia: {
-    color: "#FFFFFF",
-    fontSize: 12,
-    fontWeight: "800",
-  },
-  botonCambiar: {
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: tema.radioBoton,
-    borderWidth: 1.5,
-    borderColor: tema.colores.primario,
-    backgroundColor: tema.colores.superficie,
-    paddingVertical: 14,
-    minHeight: 50,
-  },
-  textoCambiar: {
-    color: tema.colores.textoPrincipal,
-    fontSize: 15,
-    fontWeight: "800",
-  },
-  zonaCaptura: {
-    alignItems: "center",
-    gap: 14,
-    borderWidth: 2,
-    borderStyle: "dashed",
-    borderColor: tema.colores.neutro,
-    borderRadius: tema.radio,
-    backgroundColor: tema.colores.fondo,
-    padding: 24,
-    marginTop: 6,
-  },
-  circuloIcono: {
-    width: 60,
-    height: 60,
-    alignItems: "center",
-    justifyContent: "center",
-    borderRadius: 30,
-    backgroundColor: tema.colores.fondoSuave,
-    borderWidth: 1.5,
-    borderColor: tema.colores.primario,
-  },
-  textoIcono: {
-    color: tema.colores.textoPrincipal,
-    fontSize: 12,
-    fontWeight: "900",
-    letterSpacing: 0.8,
-  },
-  textosZonaCaptura: {
-    alignItems: "center",
-    gap: 4,
-  },
-  textoVacio: {
-    color: tema.colores.textoPrincipal,
-    fontSize: 16,
-    fontWeight: "800",
-  },
-  textoAyudaCaptura: {
-    color: tema.colores.textoSecundario,
-    fontSize: 13,
-    textAlign: "center",
-    lineHeight: 18,
-  },
-  anchoBotonFoto: {
-    width: "100%",
-    marginTop: 6,
-  },
-  acciones: {
-    gap: 12,
-    paddingBottom: 8,
-  },
-});

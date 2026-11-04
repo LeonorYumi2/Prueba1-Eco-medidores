@@ -1,8 +1,8 @@
 // Paso 2 del registro: resumen y guardado (R4, R10).
 import { Redirect } from "expo-router";
 import { useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { ScrollView, Text, View } from "react-native";
+import { SafeAreaViewEstilizada } from "../../../componentes/SafeAreaViewEstilizada";
 import {
   Aviso,
   BarraSuperior,
@@ -11,7 +11,6 @@ import {
   Tarjeta,
 } from "../../../componentes/Piezas";
 import { URL_LECTURAS } from "../../../config/api";
-import { tema } from "../../../constants/tema";
 import { useApp } from "../../../contexto/AppContext";
 import { reemplazarCon, volver } from "../../../rutas";
 import { calcular } from "../../../servicios/calculos";
@@ -20,6 +19,7 @@ import { enviarPendientes } from "../../../servicios/envio";
 import { fetchConTiempo } from "../../../servicios/http";
 import { guardarLectura, mesActual } from "../../../servicios/lecturas";
 import { Borrador, Lectura } from "../../../validacion/validacion";
+import { useSesion } from "../../../contexto/sesion";
 
 const NOMBRE_ESTADO = {
   normal: "• Normal",
@@ -29,8 +29,9 @@ const NOMBRE_ESTADO = {
 
 export default function PasoResumen() {
   const { estado } = useApp();
-  if (!estado.borrador || !estado.sesion) return <Redirect href="/" />;
-  return <Resumen borrador={estado.borrador} tecnico={estado.sesion.codigo} />;
+  const { usuario } = useSesion();
+  if (!estado.borrador || !usuario?.email) return <Redirect href="/" />;
+  return <Resumen borrador={estado.borrador} tecnico={usuario.email} />;
 }
 
 function Resumen({
@@ -142,20 +143,20 @@ function Resumen({
   }
 
   return (
-    <SafeAreaView style={estilos.pantalla} edges={["top", "left", "right"]}>
+    <SafeAreaViewEstilizada className="flex-1 bg-lienzo" edges={["top", "left", "right"]}>
       <BarraSuperior
         titulo="Resumen de lectura"
         subtitulo={`${borrador.medidorCodigo} · Paso 3 de 3`}
         onVolver={volver}
       />
       <ScrollView
-        contentContainerStyle={estilos.contenido}
+        contentContainerClassName="gap-4 p-[18px] pb-10"
         showsVerticalScrollIndicator={false}
       >
         <Tarjeta>
-          <View style={estilos.cabeceraResumen}>
-            <Text style={estilos.tituloTarjeta}>Confirmación de datos</Text>
-            <Text style={estilos.subtituloTarjeta}>
+          <View className="mb-1 gap-1">
+            <Text className="text-lg font-extrabold tracking-[0.2px] text-tinta">Confirmación de datos</Text>
+            <Text className="text-sm leading-5 text-tinta-suave">
               Verifique los datos registrados antes de guardar en el dispositivo:
             </Text>
           </View>
@@ -203,7 +204,7 @@ function Resumen({
         )}
         {error && <Aviso tipo="error" texto={error} />}
 
-        <View style={estilos.acciones}>
+        <View className="mt-1.5 gap-3">
           <Boton
             texto={borrador.editando ? "Guardar corrección" : "Guardar lectura"}
             onPress={guardar}
@@ -217,37 +218,6 @@ function Resumen({
           />
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </SafeAreaViewEstilizada>
   );
 }
-
-const estilos = StyleSheet.create({
-  pantalla: {
-    flex: 1,
-    backgroundColor: tema.colores.fondo,
-  },
-  contenido: {
-    padding: 18,
-    gap: 16,
-    paddingBottom: 40,
-  },
-  cabeceraResumen: {
-    gap: 4,
-    marginBottom: 4,
-  },
-  tituloTarjeta: {
-    fontSize: 18,
-    fontWeight: "800",
-    color: tema.colores.textoPrincipal,
-    letterSpacing: 0.2,
-  },
-  subtituloTarjeta: {
-    fontSize: 14,
-    color: tema.colores.textoSecundario,
-    lineHeight: 20,
-  },
-  acciones: {
-    gap: 12,
-    marginTop: 6,
-  },
-});

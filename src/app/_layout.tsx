@@ -4,20 +4,24 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import { IndicadorEstado } from '../componentes/IndicadorEstado';
 import { AppProvider, useApp } from '../contexto/AppContext';
+import { ProveedorSesion, useSesion } from '../contexto/sesion';
 import { opcionesPersistencia, queryClient } from '../servicios/clienteConsultas';
+import '../global.css';
 
-// La pantalla de carga se mantiene hasta saber si hay sesión guardada y terminar la restauración de la caché (ADR-001, ADR-003).
+
+// La pantalla de carga se mantiene hasta saber si hay sesión guardada y terminar la restauración de la caché (ADR-001, ADR-003, ADR-009).
 SplashScreen.preventAutoHideAsync();
 
 function Navegacion() {
   const { estado } = useApp();
+  const { usuario, verificado, cargando: cargandoSesion } = useSesion();
   // useIsRestoring indica si PersistQueryClientProvider sigue leyendo la caché desde AsyncStorage.
   const restaurandoCache = useIsRestoring();
 
-  const cargando = estado.cargandoSesion || restaurandoCache;
+  const cargando = estado.cargandoSesion || cargandoSesion || restaurandoCache;
 
   useEffect(() => {
     if (!cargando) SplashScreen.hideAsync();
@@ -25,15 +29,21 @@ function Navegacion() {
 
   if (cargando) return null;
 
-  const haySesion = estado.sesion !== null;
+  const autenticado = usuario !== null;
+  const accesoPermitido = autenticado && verificado;
+  const necesitaVerificar = autenticado && !verificado;
+
   return (
-    <View style={estilos.contenedor}>
+    <View className="flex-1">
       <StatusBar style="auto" />
       <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Protected guard={haySesion}>
+        <Stack.Protected guard={accesoPermitido}>
           <Stack.Screen name="(app)" />
         </Stack.Protected>
-        <Stack.Protected guard={!haySesion}>
+        <Stack.Protected guard={necesitaVerificar}>
+          <Stack.Screen name="verificar-correo" />
+        </Stack.Protected>
+        <Stack.Protected guard={!autenticado}>
           <Stack.Screen name="(auth)" />
         </Stack.Protected>
       </Stack>
@@ -45,13 +55,11 @@ function Navegacion() {
 export default function RootLayout() {
   return (
     <PersistQueryClientProvider client={queryClient} persistOptions={opcionesPersistencia}>
-      <AppProvider>
-        <Navegacion />
-      </AppProvider>
+      <ProveedorSesion>
+        <AppProvider>
+          <Navegacion />
+        </AppProvider>
+      </ProveedorSesion>
     </PersistQueryClientProvider>
   );
 }
-
-const estilos = StyleSheet.create({
-  contenedor: { flex: 1 },
-});

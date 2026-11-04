@@ -1,9 +1,49 @@
-:root {
-  --font-display:
-    Spline Sans, Inter, ui-sans-serif, system-ui, sans-serif, Apple Color Emoji, Segoe UI Emoji,
-    Segoe UI Symbol, Noto Color Emoji;
-  --font-mono:
-    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, Courier New, monospace;
-  --font-rounded: 'SF Pro Rounded', 'Hiragino Maru Gothic ProN', Meiryo, 'MS PGothic', sans-serif;
-  --font-serif: Georgia, 'Times New Roman', serif;
+@import 'tailwindcss';
+@import 'uniwind';
+
+/*
+ * Tema visual de EcoMedidores (ADR-010).
+ * Los colores salen de la paleta institucional de EPMAPS y de derivados declarados.
+ * Las pantallas usan solo estos nombres (bg-primario, text-tinta, ...); nunca un hex suelto.
+ */
+@theme {
+  /* --- Colores base institucionales --- */
+  --color-primario: #6074A7; /* encabezados, botones principales, elementos activos */
+  --color-critico: #B72943; /* errores, descartar, "en conflicto", consumo anómalo */
+  --color-calido: #C1B388; /* detalles decorativos, líneas de acento, avisos "por verificar" */
+  --color-agua: #D4E6F3; /* fondos suaves, chips informativos, cabeceras suaves */
+  --color-neutro: #C6CADD; /* bordes, divisores, campos inactivos, deshabilitados */
+
+  /* --- Derivados permitidos --- */
+  --color-tinta: #27357C; /* texto principal y títulos: azul del escudo */
+  --color-tinta-suave: #455375; /* texto secundario y etiquetas */
+  --color-superficie: #FFFFFF; /* tarjetas y campos */
+  --color-lienzo: #EBF3F9; /* fondo general de pantalla, derivado de #D4E6F3 */
+  --color-primario-oscuro: #485882; /* estado presionado del primario */
+  --color-critico-oscuro: #8E1F33; /* estado presionado de acciones críticas */
+
+  /* Avisos (tintes de #C1B388, con texto oscuro de contraste alto) */
+  --color-aviso-fondo: #F7F3E8;
+  --color-aviso-borde: #D6C8A1;
+  --color-aviso-texto: #4E411E;
+
+  /* Errores (tintes de #B72943) */
+  --color-error-fondo: #FCECEF;
+  --color-error-borde: #E8A2AD;
+  --color-error-texto: #781527;
+
+  /* Información (tintes de #D4E6F3 y #6074A7) */
+  --color-info-fondo: #EAF2F9;
+  --color-info-borde: #AECBE2;
+  --color-info-texto: #27357C;
+
+  /* Único color fuera de la paleta: verde para "Enviada" y "Fuerte" */
+  --color-exito: #1B7F4B;
+  --color-exito-fondo: #E8F5ED;
+  --color-exito-borde: #B1DFBE;
+  --color-exito-texto: #0F5430;
+
+  /* Radios inspirados en la fluidez del agua */
+  --radius-tarjeta: 16px;
+  --radius-boton: 14px;
 }

@@ -1,59 +1,69 @@
 // Piezas visuales reutilizables con identidad institucional EPMAPS.
-import { ReactNode } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
+import { ReactNode, useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+  type TextInputProps,
+} from 'react-native';
+import Animated, {
+  interpolateColor,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { tema } from '../constants/tema';
+import { evaluarFuerza } from '../validacion/validacion';
+import { AvisoAnimado, Entrada, useEscalaAlPresionar } from './Animados';
+import { SafeAreaViewEstilizada } from './SafeAreaViewEstilizada';
 
 export function Aviso({ texto, tipo }: { texto: string; tipo: 'info' | 'aviso' | 'error' }) {
-  const configuracion = {
+  const configuraciones = {
     info: {
-      fondo: tema.colores.infoFondo,
-      texto: tema.colores.infoTexto,
-      borde: tema.colores.infoBorde,
+      clases: 'bg-info-fondo border-info-borde text-info-texto',
       icono: 'ℹ',
     },
     aviso: {
-      fondo: tema.colores.calidoFondo,
-      texto: tema.colores.calidoTexto,
-      borde: tema.colores.calidoBorde,
+      clases: 'bg-aviso-fondo border-aviso-borde text-aviso-texto',
       icono: '▲',
     },
     error: {
-      fondo: tema.colores.criticoFondo,
-      texto: tema.colores.criticoTexto,
-      borde: tema.colores.criticoBorde,
+      clases: 'bg-error-fondo border-error-borde text-error-texto',
       icono: '✕',
     },
-  }[tipo];
+  };
+  const configuracion = configuraciones[tipo];
+  const claseIcono = tipo === 'info'
+    ? 'text-info-texto'
+    : tipo === 'aviso'
+      ? 'text-aviso-texto'
+      : 'text-error-texto';
 
   return (
-    <View
-      style={[
-        estilos.aviso,
-        {
-          backgroundColor: configuracion.fondo,
-          borderColor: configuracion.borde,
-        },
-      ]}
-    >
-      <Text style={[estilos.iconoAviso, { color: configuracion.texto }]}>
+    <AvisoAnimado className={`flex-row items-start gap-2.5 rounded-tarjeta border-[1.5px] px-4 py-3.5 ${configuracion.clases}`}>
+      <Text className={`mt-0.5 text-sm font-extrabold ${claseIcono}`}>
         {configuracion.icono}
       </Text>
-      <Text style={[estilos.textoAviso, { color: configuracion.texto }]}>{texto}</Text>
-    </View>
+      <Text className={`flex-1 text-sm font-semibold leading-5 ${claseIcono}`}>{texto}</Text>
+    </AvisoAnimado>
   );
 }
 
 export function Fila({ etiqueta, valor }: { etiqueta: string; valor: string }) {
   return (
-    <View style={estilos.fila}>
-      <Text style={estilos.etiquetaFila}>{etiqueta}</Text>
-      <Text style={estilos.valorFila}>{valor}</Text>
+    <View className="gap-1 border-t border-agua pt-2.5">
+      <Text className="text-[11px] font-bold uppercase tracking-[0.8px] text-tinta-suave">{etiqueta}</Text>
+      <Text className="text-base font-bold leading-[22px] text-tinta">{valor}</Text>
     </View>
   );
 }
 
 export function Tarjeta({ children }: { children: ReactNode }) {
-  return <View style={estilos.tarjeta}>{children}</View>;
+  return <Entrada className="gap-3.5 rounded-tarjeta border-[1.5px] border-neutro bg-superficie p-5">{children}</Entrada>;
 }
 
 type PropsBoton = {
@@ -71,51 +81,45 @@ export function Boton({
   deshabilitado,
   variante = 'principal',
 }: PropsBoton) {
-  const fondo = {
-    principal: tema.colores.primario,
-    secundario: tema.colores.superficie,
-    peligro: tema.colores.criticoFondo,
+  const clases = {
+    principal: 'min-h-[52px] items-center justify-center rounded-boton border-[1.5px] border-primario bg-primario px-5 py-[15px] text-white',
+    secundario: 'min-h-[52px] items-center justify-center rounded-boton border-[1.5px] border-primario bg-superficie px-5 py-[15px] text-tinta',
+    peligro: 'min-h-[52px] items-center justify-center rounded-boton border-[1.5px] border-critico bg-error-fondo px-5 py-[15px] text-critico',
   }[variante];
-
-  const colorTexto = {
-    principal: '#FFFFFF',
-    secundario: tema.colores.textoPrincipal,
-    peligro: tema.colores.critico,
-  }[variante];
-
-  const borde = {
-    principal: tema.colores.primario,
-    secundario: tema.colores.primario,
-    peligro: tema.colores.critico,
-  }[variante];
-
-  const fondoPresionado = {
-    principal: tema.colores.primarioPresionado,
-    secundario: tema.colores.infoFondo,
-    peligro: '#FCE0E5',
+  const clasesInactivas = {
+    principal: 'min-h-[52px] items-center justify-center rounded-boton border-[1.5px] border-neutro bg-primario px-5 py-[15px] text-white opacity-45',
+    secundario: 'min-h-[52px] items-center justify-center rounded-boton border-[1.5px] border-neutro bg-superficie px-5 py-[15px] text-tinta opacity-45',
+    peligro: 'min-h-[52px] items-center justify-center rounded-boton border-[1.5px] border-neutro bg-error-fondo px-5 py-[15px] text-critico opacity-45',
   }[variante];
 
   const inactivo = Boolean(cargando || deshabilitado);
+  const { estilo: estiloEscala, onPressIn, onPressOut } = useEscalaAlPresionar();
 
   return (
-    <Pressable
-      onPress={onPress}
-      disabled={inactivo}
-      style={({ pressed }) => [
-        estilos.boton,
-        {
-          backgroundColor: pressed ? fondoPresionado : fondo,
-          borderColor: borde,
-        },
-        inactivo && estilos.botonDeshabilitado,
-      ]}
-    >
-      {cargando ? (
-        <ActivityIndicator color={colorTexto} />
-      ) : (
-        <Text style={[estilos.textoBoton, { color: colorTexto }]}>{texto}</Text>
-      )}
-    </Pressable>
+    <Animated.View style={estiloEscala}>
+      <Pressable
+        onPress={onPress}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+        disabled={inactivo}
+        className={inactivo ? clasesInactivas : clases}
+        style={({ pressed }) => pressed && !inactivo ? { opacity: 0.84 } : undefined}
+      >
+        {cargando ? (
+          <ActivityIndicator
+            colorClassName={
+              variante === 'principal'
+                ? 'accent-white'
+                : variante === 'secundario'
+                  ? 'accent-tinta'
+                  : 'accent-critico'
+            }
+          />
+        ) : (
+          <Text className={`text-base font-extrabold tracking-[0.3px] ${variante === 'principal' ? 'text-white' : variante === 'secundario' ? 'text-tinta' : 'text-critico'}`}>{texto}</Text>
+        )}
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -129,141 +133,111 @@ export function BarraSuperior({
   onVolver?: () => void;
 }) {
   return (
-    <View style={estilos.barra}>
+    <View className="relative overflow-hidden rounded-b-[24px] bg-primario px-5 pb-4 pt-3">
       {/* Círculos translúcidos decorativos inspirados en ondas de agua */}
-      <View style={estilos.gotaOnda1} />
-      <View style={estilos.gotaOnda2} />
+      <View className="absolute -right-5 -top-5 h-[110px] w-[110px] rounded-full bg-white/10" />
+      <View className="absolute -bottom-[30px] left-1/4 h-[90px] w-[90px] rounded-full bg-agua/10" />
 
-      <View style={estilos.contenidoBarra}>
+      <View className="z-10 gap-1">
         {onVolver && (
-          <Pressable onPress={onVolver} hitSlop={12} style={estilos.volver}>
-            <Text style={estilos.textoVolver}>← Volver</Text>
+          <Pressable onPress={onVolver} hitSlop={12} className="mb-1 self-start py-1 pr-2.5">
+            <Text className="text-sm font-bold text-white">← Volver</Text>
           </Pressable>
         )}
-        <Text style={estilos.barraTitulo}>{titulo}</Text>
-        {subtitulo ? <Text style={estilos.barraSub}>{subtitulo}</Text> : null}
+        <Text className="text-xl font-extrabold tracking-[0.2px] text-white">{titulo}</Text>
+        {subtitulo ? <Text className="text-[13px] font-semibold text-agua">{subtitulo}</Text> : null}
       </View>
     </View>
   );
 }
 
-const estilos = StyleSheet.create({
-  aviso: {
-    borderRadius: tema.radio,
-    borderWidth: 1.5,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-  },
-  iconoAviso: {
-    fontSize: 14,
-    fontWeight: '800',
-    marginTop: 2,
-  },
-  textoAviso: {
-    flex: 1,
-    fontSize: 14,
-    lineHeight: 20,
-    fontWeight: '600',
-  },
-  fila: {
-    borderTopWidth: 1,
-    borderTopColor: tema.colores.fondoSuave,
-    paddingTop: 10,
-    gap: 3,
-  },
-  etiquetaFila: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: tema.colores.textoSecundario,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
-  valorFila: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: tema.colores.textoPrincipal,
-    lineHeight: 22,
-  },
-  tarjeta: {
-    backgroundColor: tema.colores.superficie,
-    borderRadius: tema.radio,
-    padding: 20,
-    gap: 14,
-    borderWidth: 1.5,
-    borderColor: tema.colores.neutro,
-  },
-  boton: {
-    borderRadius: tema.radioBoton,
-    paddingVertical: 15,
-    paddingHorizontal: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1.5,
-    minHeight: 52,
-  },
-  botonDeshabilitado: {
-    opacity: 0.45,
-    borderColor: tema.colores.neutro,
-  },
-  textoBoton: {
-    fontSize: 16,
-    fontWeight: '800',
-    letterSpacing: 0.3,
-  },
-  barra: {
-    backgroundColor: tema.colores.primario,
-    paddingHorizontal: 20,
-    paddingTop: 12,
-    paddingBottom: 16,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
-    overflow: 'hidden',
-  },
-  gotaOnda1: {
-    position: 'absolute',
-    top: -20,
-    right: -20,
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
-  },
-  gotaOnda2: {
-    position: 'absolute',
-    bottom: -30,
-    left: '25%',
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: 'rgba(212, 230, 243, 0.1)',
-  },
-  contenidoBarra: {
-    zIndex: 1,
-    gap: 4,
-  },
-  volver: {
-    alignSelf: 'flex-start',
-    paddingVertical: 4,
-    paddingRight: 10,
-    marginBottom: 4,
-  },
-  textoVolver: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  barraTitulo: {
-    color: '#FFFFFF',
-    fontSize: 20,
-    fontWeight: '800',
-    letterSpacing: 0.2,
-  },
-  barraSub: {
-    color: tema.colores.fondoSuave,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-});
+type PropsCampo = TextInputProps & {
+  etiqueta: string;
+  error?: string | null;
+  esClave?: boolean;
+};
+
+export function CampoTexto({ etiqueta, error, esClave = false, style, ...props }: PropsCampo) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <View className="gap-1.5">
+      <Text className="text-[11px] font-extrabold tracking-[0.8px] text-tinta-suave">{etiqueta.toUpperCase()}</Text>
+      <View className={`flex-row items-center rounded-boton border-[1.5px] bg-superficie px-4 ${error ? 'border-critico' : 'border-neutro'}`}>
+        <TextInput
+          {...props}
+          className="flex-1 py-3.5 text-base font-semibold text-tinta"
+          style={style}
+          placeholderTextColorClassName="accent-neutro"
+          secureTextEntry={esClave && !visible}
+          autoCapitalize={props.autoCapitalize ?? 'none'}
+          autoCorrect={false}
+          accessibilityLabel={etiqueta}
+        />
+        {esClave && (
+          <Pressable
+            onPress={() => setVisible((v) => !v)}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={visible ? 'Ocultar contraseña' : 'Mostrar contraseña'}>
+            <Text className="text-xs font-extrabold tracking-[0.5px] text-primario">{visible ? 'Ocultar' : 'Mostrar'}</Text>
+          </Pressable>
+        )}
+      </View>
+      {error ? <Text className="text-xs font-bold text-critico">✕ {error}</Text> : null}
+    </View>
+  );
+}
+
+export function IndicadorFuerza({ clave }: { clave: string }) {
+  const f = evaluarFuerza(clave);
+  const ancho = useSharedValue(0);
+  const progreso = useSharedValue(0);
+  useEffect(() => {
+    ancho.value = withTiming(f.progreso * 100, { duration: 350 });
+    progreso.value = withTiming(f.progreso, { duration: 350 });
+  }, [f.progreso, ancho, progreso]);
+  const estiloBarra = useAnimatedStyle(() => ({
+    width: `${ancho.value}%`,
+    backgroundColor: interpolateColor(
+      progreso.value,
+      [0, 0.5, 1],
+      [tema.colores.critico, tema.colores.calido, tema.colores.enviada],
+    ),
+  }));
+  if (f.nivel === 'vacia') return null;
+  return (
+    <View className="mt-[-4px] gap-1.5" accessibilityLabel={`Seguridad de la contraseña: ${f.etiqueta}`}>
+      <View className="h-1.5 overflow-hidden rounded-full bg-agua">
+        <Animated.View className="h-full rounded-full" style={estiloBarra} />
+      </View>
+      <Text className="text-xs font-bold text-tinta-suave">Seguridad: {f.etiqueta}</Text>
+    </View>
+  );
+}
+
+// Plantilla de las pantallas de formulario nuevas (con el encabezado institucional).
+export function PantallaFormulario({
+  titulo,
+  subtitulo,
+  onVolver,
+  children,
+}: {
+  titulo: string;
+  subtitulo?: string;
+  onVolver?: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <SafeAreaViewEstilizada className="flex-1 bg-lienzo" edges={['top', 'left', 'right']}>
+      <BarraSuperior titulo={titulo} subtitulo={subtitulo} onVolver={onVolver} />
+      <KeyboardAvoidingView className="flex-1" behavior="padding">
+        <ScrollView
+          contentContainerClassName="gap-4 p-5 pb-10"
+          keyboardShouldPersistTaps="handled"
+          showsVerticalScrollIndicator={false}>
+          {children}
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </SafeAreaViewEstilizada>
+  );
+}
